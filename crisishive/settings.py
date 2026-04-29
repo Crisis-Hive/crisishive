@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
+'location',
+=======
     'accounts.apps.AccountsConfig',
     'feed.apps.FeedConfig',
     'response.apps.ResponseConfig',
@@ -46,6 +49,7 @@ INSTALLED_APPS = [
     'community.apps.CommunityConfig',
     'allauth',
     'allauth.account',
+>>>>>>> 55cd760f8900dcf36551d6051c6a541353f629b1
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,53 @@
+/* ── CrisisHive Base Styles ── */
+:root {
+    --red:        #E8001D;
+    --red-dark:   #B0001A;
+    --red-glow:   rgba(232, 0, 29, 0.18);
+    --bg:         #0A0A0A;
+    --bg-2:       #111111;
+    --bg-3:       #1A1A1A;
+    --border:     #2A2A2A;
+    --text:       #F0F0F0;
+    --text-muted: #888888;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body:    'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--red); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Messages */
+.messages {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.message {
+    padding: 0.75rem 1.25rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: var(--bg-3);
+    border-left: 3px solid var(--text-muted);
+}
+
+.message--error   { border-color: var(--red); color: #ff6b6b; }
+.message--success { border-color: #00c853; color: #69f0ae; }
+.message--warning { border-color: #ffd600; color: #ffd600; }

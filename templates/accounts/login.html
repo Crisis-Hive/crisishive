@@ -1,10 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Login — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+
+    <div class="auth-left">
+        <div class="brand">
+            <span class="brand__hex">&#9632;</span>
+            <span class="brand__name">CrisisHive</span>
+        </div>
+        <div class="auth-left__tagline">
+            <h1>Report.<br>Respond.<br>Recover.</h1>
+            <p>Real-time crisis coordination for communities that refuse to wait.</p>
+        </div>
+        <div class="auth-left__stats">
+            <div class="stat">
+                <span class="stat__number">24</span>
+                <span class="stat__label">Active Crises</span>
+            </div>
+            <div class="stat">
+                <span class="stat__number">8</span>
+                <span class="stat__label">Resolved Today</span>
+            </div>
+            <div class="stat">
+                <span class="stat__number">5</span>
+                <span class="stat__label">Teams Deployed</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-right">
+        <div class="auth-card">
+            <h2 class="auth-card__title">Sign In</h2>
+            <p class="auth-card__sub">Access the crisis dashboard</p>
+
+            <form method="POST" action="{% url 'login' %}" id="loginForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                    <span class="form-group__error" id="emailError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                        <button type="button" class="toggle-pw" id="togglePw">Show</button>
+                    </div>
+                    <span class="form-group__error" id="passwordError"></span>
+                </div>
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader" hidden>...</span>
+                </button>
+            </form>
+
+            <p class="auth-card__switch">
+                Don't have an account? <a href="{% url 'register' %}">Register here</a>
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/login.js' %}"></script>
+{% endblock %}

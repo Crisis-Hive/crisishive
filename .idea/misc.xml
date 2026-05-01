@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Black">
+<<<<<<< HEAD
     <option name="sdkName" value="Python 3.14 (crisishive)" />
+=======
+    <option name="sdkName" value="Python 3.14 (CrisisHive)" />
+>>>>>>> 65a093803ff639393a7d93274f367836b7927096
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.14 (CrisisHive)" project-jdk-type="Python SDK" />
 </project>

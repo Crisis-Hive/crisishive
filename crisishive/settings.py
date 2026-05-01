@@ -33,15 +33,18 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'community',
+    'feed',
+    'accounts',
+    'location',
+    'response',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
-'location',
-=======
+
     'accounts.apps.AccountsConfig',
     'feed.apps.FeedConfig',
     'response.apps.ResponseConfig',
@@ -49,7 +52,6 @@ INSTALLED_APPS = [
     'community.apps.CommunityConfig',
     'allauth',
     'allauth.account',
->>>>>>> 55cd760f8900dcf36551d6051c6a541353f629b1
 ]
 
 MIDDLEWARE = [
@@ -68,7 +70,7 @@ ROOT_URLCONF = 'crisishive.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

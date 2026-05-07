@@ -1,10 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Register — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+
+    <div class="auth-left">
+        <div class="brand">
+            <span class="brand__hex">&#9632;</span>
+            <span class="brand__name">CrisisHive</span>
+        </div>
+        <div class="auth-left__tagline">
+            <h1>Join the<br>Network.</h1>
+            <p>Every account is a new node in Bangladesh's crisis response grid.</p>
+        </div>
+        <div class="auth-left__roles">
+            <p class="roles__label">Who can join?</p>
+            <div class="role-pill">&#128100; General Public</div>
+            <div class="role-pill">&#128657; Relief Teams</div>
+            <div class="role-pill">&#127963; Government Officials</div>
+            <div class="role-pill">&#128240; Journalists</div>
+        </div>
+    </div>
+
+    <div class="auth-right">
+        <div class="auth-card">
+            <h2 class="auth-card__title">Create Account</h2>
+            <p class="auth-card__sub">Start reporting and responding</p>
+
+            <form method="POST" action="{% url 'register' %}" id="registerForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                    <span class="form-group__error" id="emailError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Display name" required>
+                    <span class="form-group__error" id="usernameError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="password" name="password" placeholder="Min. 8 characters" required>
+                        <button type="button" class="toggle-pw" id="togglePw">Show</button>
+                    </div>
+                    <span class="form-group__error" id="passwordError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="role">Your Role</label>
+                    <select id="role" name="role" required>
+                        <option value="" disabled selected>Select your role</option>
+                        {% for role in roles %}
+                        <option value="{{ role.id }}">{{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="form-group__error" id="roleError"></span>
+                </div>
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span class="btn-text">Create Account</span>
+                    <span class="btn-loader" hidden>...</span>
+                </button>
+            </form>
+
+            <p class="auth-card__switch">
+                Already have an account? <a href="{% url 'login' %}">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/register.js' %}"></script>
+{% endblock %}

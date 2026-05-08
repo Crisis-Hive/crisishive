@@ -1,10 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Profile — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="profile-wrapper">
+
+    <div class="profile-header">
+        <div class="profile-header__avatar">
+            {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="Avatar">
+            {% else %}
+                <div class="avatar-placeholder">{{ request.user.username|first|upper }}</div>
+            {% endif %}
+            <label class="avatar-edit" for="avatarInput" title="Change photo">&#9998;</label>
+        </div>
+        <div class="profile-header__info">
+            <h1>{{ request.user.username }}</h1>
+            <div class="profile-header__meta">
+                <span class="role-badge">{{ request.user.role }}</span>
+                {% if profile.is_verified %}
+                <span class="verified-badge">&#10003; Verified</span>
+                {% endif %}
+            </div>
+            <p class="profile-header__email">{{ request.user.email }}</p>
+        </div>
+    </div>
+
+    <div class="profile-body">
+
+        <div class="profile-tabs">
+            <button class="tab-btn active" data-tab="edit">Edit Profile</button>
+            <button class="tab-btn" data-tab="reports">My Reports</button>
+            <button class="tab-btn" data-tab="volunteers">My Volunteers</button>
+            <button class="tab-btn" data-tab="donations">My Donations</button>
+        </div>
+
+        <!-- EDIT PROFILE TAB -->
+        <div class="tab-content active" id="tab-edit">
+            <form method="POST" enctype="multipart/form-data" id="profileForm">
+                {% csrf_token %}
+                <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" value="{{ request.user.username }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" name="phone" value="{{ profile.phone }}" placeholder="+880...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" name="bio" rows="3" placeholder="Tell the community about yourself...">{{ profile.bio }}</textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </form>
+        </div>
+
+        <!-- MY REPORTS TAB -->
+        <div class="tab-content" id="tab-reports">
+            {% if request.user.reported_crises.all %}
+                <div class="mini-crisis-list">
+                {% for crisis in request.user.reported_crises.all %}
+                    <a href="{% url 'crisis_detail' crisis.pk %}" class="mini-crisis-card">
+                        <span class="severity-dot severity-dot--{{ crisis.severity }}"></span>
+                        <div>
+                            <p class="mini-crisis-card__title">{{ crisis.title }}</p>
+                            <p class="mini-crisis-card__meta">{{ crisis.district }} · {{ crisis.status }}</p>
+                        </div>
+                    </a>
+                {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">You haven't reported any crises yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- MY VOLUNTEERS TAB -->
+        <div class="tab-content" id="tab-volunteers">
+            {% if request.user.volunteer_signups.all %}
+                <div class="mini-crisis-list">
+                {% for v in request.user.volunteer_signups.all %}
+                    <div class="mini-crisis-card">
+                        <span class="status-dot status-dot--{{ v.status }}"></span>
+                        <div>
+                            <p class="mini-crisis-card__title">{{ v.crisis.title }}</p>
+                            <p class="mini-crisis-card__meta">Skill: {{ v.skill }} · {{ v.status }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">You haven't volunteered for any crises yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- MY DONATIONS TAB -->
+        <div class="tab-content" id="tab-donations">
+            {% if request.user.donations.all %}
+                <div class="mini-crisis-list">
+                {% for d in request.user.donations.all %}
+                    <div class="mini-crisis-card">
+                        <div>
+                            <p class="mini-crisis-card__title">{{ d.crisis.title }}</p>
+                            <p class="mini-crisis-card__meta">
+                                {% if d.amount %}৳{{ d.amount }}{% endif %}
+                                {% if d.resource %} · {{ d.resource }}{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">You haven't made any donations yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/profile.js' %}"></script>
+{% endblock %}

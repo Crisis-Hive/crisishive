@@ -1,10 +1,121 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Crisis Feed — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/feed.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="feed-hero">
+    <div class="feed-hero__text">
+        <h1>Report. Respond. Recover.</h1>
+        <a href="{% url 'report_crisis' %}" class="btn-hero">Report a Crisis Now</a>
+    </div>
+    <div class="feed-hero__stats">
+        <div class="hero-stat">
+            <span>{{ crises|length }}</span>
+            <small>Active Crises</small>
+        </div>
+        <div class="hero-stat">
+            <span>—</span>
+            <small>Resolved Today</small>
+        </div>
+        <div class="hero-stat">
+            <span>—</span>
+            <small>Teams Deployed</small>
+        </div>
+    </div>
+</div>
+
+<div class="feed-wrapper">
+
+    <!-- FILTER BAR -->
+    <form method="GET" class="filter-bar" id="filterForm">
+        <select name="district" onchange="this.form.submit()">
+            <option value="">All Districts</option>
+            {% for d in districts %}
+            <option value="{{ d.id }}" {% if request.GET.district == d.id|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="category" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}" {% if request.GET.category == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="severity" onchange="this.form.submit()">
+            <option value="">All Severities</option>
+            {% for val, label in severity_choices %}
+            <option value="{{ val }}" {% if request.GET.severity == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="status" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="text" name="q" placeholder="Search crises..." value="{{ request.GET.q }}">
+
+        <select name="sort" onchange="this.form.submit()">
+            <option value="latest" {% if request.GET.sort == 'latest' %}selected{% endif %}>Latest</option>
+            <option value="upvotes" {% if request.GET.sort == 'upvotes' %}selected{% endif %}>Most Upvoted</option>
+            <option value="critical" {% if request.GET.sort == 'critical' %}selected{% endif %}>Critical First</option>
+        </select>
+    </form>
+
+    <!-- CRISIS CARDS -->
+    <div class="crisis-grid">
+        {% for crisis in crises %}
+        <div class="crisis-card">
+            <div class="crisis-card__top">
+                <span class="category-badge" style="background: {{ crisis.category.color|default:'#555' }}">
+                    {{ crisis.category.icon }} {{ crisis.category.name }}
+                </span>
+                <span class="severity-badge severity-badge--{{ crisis.severity }}">{{ crisis.severity }}</span>
+            </div>
+
+            {% if crisis.media.first %}
+            <div class="crisis-card__thumb">
+                <img src="{{ crisis.media.first.file.url }}" alt="Crisis media">
+            </div>
+            {% endif %}
+
+            <div class="crisis-card__body">
+                <h3>{{ crisis.title }}</h3>
+                <p>{{ crisis.description|truncatechars:100 }}</p>
+                <div class="crisis-card__meta">
+                    <span>{{ crisis.reported_by.username }}</span>
+                    <span>{{ crisis.created_at|timesince }} ago</span>
+                    <span>{{ crisis.district }}</span>
+                </div>
+            </div>
+
+            <div class="crisis-card__footer">
+                <span class="status-badge status-badge--{{ crisis.status }}">{{ crisis.status }}</span>
+                <button class="upvote-btn" data-id="{{ crisis.pk }}">
+                    &#9650; <span class="upvote-count">{{ crisis.upvote_count }}</span>
+                </button>
+                <a href="{% url 'crisis_detail' crisis.pk %}" class="btn-detail">View Details</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="empty-state">No crises found matching your filters.</p>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feed.js' %}"></script>
+{% endblock %}

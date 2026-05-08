@@ -1,10 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Assign Team — {{ crisis.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/response.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="form-page-wrapper">
+    <div class="form-page-header">
+        <p class="form-page-header__back"><a href="{% url 'crisis_detail' crisis.pk %}">&#8592; Back to Crisis</a></p>
+        <h1>Assign Response Team</h1>
+        <p class="form-page-header__sub">Crisis: <strong>{{ crisis.title }}</strong> · {{ crisis.district }} · <span class="severity-badge severity-badge--{{ crisis.severity }}">{{ crisis.severity }}</span></p>
+    </div>
+
+    <form method="POST" class="action-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Select Team</label>
+            <div class="team-list">
+                {% for team in teams %}
+                <label class="team-option">
+                    <input type="radio" name="team" value="{{ team.id }}" required>
+                    <div class="team-option__card">
+                        <div class="team-option__top">
+                            <span class="team-type-badge team-type-badge--{{ team.team_type }}">{{ team.team_type }}</span>
+                            <span class="team-option__name">{{ team.name }}</span>
+                        </div>
+                        <div class="team-option__meta">
+                            <span>&#128205; {{ team.district }}</span>
+                            <span>&#128222; {{ team.contact }}</span>
+                            <span>Leader: {{ team.leader.username }}</span>
+                        </div>
+                    </div>
+                </label>
+                {% empty %}
+                <p class="empty-state">No active teams available.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="note">Special Instructions <span class="optional">(optional)</span></label>
+            <textarea id="note" name="note" rows="3" placeholder="Any notes for the team..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary">Assign Team</button>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/response.js' %}"></script>
+{% endblock %}

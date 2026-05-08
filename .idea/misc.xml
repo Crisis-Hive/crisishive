@@ -2,10 +2,20 @@
 <project version="4">
   <component name="Black">
 <<<<<<< HEAD
+    <option name="sdkName" value="Python 3.14 (crisishive) (2)" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.14 (crisishive)" project-jdk-type="Python SDK" />
+=======
+<<<<<<< HEAD
     <option name="sdkName" value="Python 3.14 (crisishive)" />
 =======
     <option name="sdkName" value="Python 3.14 (CrisisHive)" />
 >>>>>>> 65a093803ff639393a7d93274f367836b7927096
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.14 (CrisisHive)" project-jdk-type="Python SDK" />
+<<<<<<< HEAD
+>>>>>>> 55cd760f8900dcf36551d6051c6a541353f629b1
+>>>>>>> 82c1293ca5498d3a52d52b38199e1fc65e71b551
+=======
+>>>>>>> 7ea38ecaa3630cb0b86cd1d8d17257b2b4c59742
 </project>

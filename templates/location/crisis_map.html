@@ -1,10 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Crisis Map — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/map.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="map-wrapper">
+
+    <!-- SIDE PANEL -->
+    <div class="map-panel">
+        <h2 class="map-panel__title">Crisis Map</h2>
+        <p class="map-panel__sub">{{ crisis_data|length }} active crises</p>
+
+        <div class="map-filters">
+            <label class="map-filter-label">Filter by District</label>
+            <select id="districtFilter">
+                <option value="">All Districts</option>
+                {% for d in districts %}
+                <option value="{{ d.name }}">{{ d.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="map-filter-label">Filter by Severity</label>
+            <div class="severity-checks">
+                <label><input type="checkbox" value="critical" checked> <span class="sev-dot sev-dot--critical"></span> Critical</label>
+                <label><input type="checkbox" value="high" checked> <span class="sev-dot sev-dot--high"></span> High</label>
+                <label><input type="checkbox" value="medium" checked> <span class="sev-dot sev-dot--medium"></span> Medium</label>
+                <label><input type="checkbox" value="low" checked> <span class="sev-dot sev-dot--low"></span> Low</label>
+            </div>
+        </div>
+
+        <div class="map-legend">
+            <p class="map-filter-label">Legend</p>
+            <div class="legend-item"><span class="legend-dot" style="background:#E8001D"></span> Critical</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#ff6d00"></span> High</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#ffd600"></span> Medium</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#00c853"></span> Low</div>
+        </div>
+    </div>
+
+    <!-- MAP -->
+    <div id="crisisMap" class="map-container"></div>
+
+</div>
+
+<!-- Pass crisis data to JS -->
+<script>
+    window.CRISIS_DATA = {{ crisis_data|safe }};
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/map.js' %}"></script>
+{% endblock %}

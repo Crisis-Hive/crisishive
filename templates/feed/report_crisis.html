@@ -1,10 +1,108 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Report a Crisis — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/response.css' %}">
+<link rel="stylesheet" href="{% static 'css/feed.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="form-page-wrapper form-page-wrapper--wide">
+    <div class="form-page-header">
+        <h1>Report a Crisis</h1>
+        <p class="form-page-header__sub">Be specific. Accurate reports save lives.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="action-form" id="reportForm">
+        {% csrf_token %}
+
+        <div class="report-grid">
+            <div class="report-grid__left">
+
+                <div class="form-group">
+                    <label for="title">Crisis Title</label>
+                    <input type="text" id="title" name="title" placeholder="e.g. Flash flood in Demra" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4"
+                        placeholder="Describe what is happening, how many people are affected, what resources are needed..." required></textarea>
+                </div>
+
+                <div class="report-grid__row">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category" required>
+                            <option value="" disabled selected>Select type</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="severity">Severity</label>
+                        <select id="severity" name="severity" required>
+                            <option value="" disabled selected>Select level</option>
+                            {% for val, label in severity_choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="district">District</label>
+                        <select id="district" name="district" required>
+                            <option value="" disabled selected>Select district</option>
+                            {% for d in districts %}
+                            <option value="{{ d.id }}">{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- MEDIA UPLOAD -->
+                <div class="form-group">
+                    <label>Photos / Videos</label>
+                    <div class="dropzone" id="dropzone">
+                        <input type="file" name="media" id="mediaInput" multiple accept="image/*,video/*" hidden>
+                        <div class="dropzone__inner" id="dropzoneInner">
+                            <span class="dropzone__icon">&#128247;</span>
+                            <p>Drag & drop or <span class="dropzone__browse">browse</span></p>
+                            <p class="dropzone__hint">Images and videos accepted</p>
+                        </div>
+                        <div class="dropzone__preview" id="mediaPreview"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="report-grid__right">
+                <div class="form-group">
+                    <label>Pin Location on Map</label>
+                    <p class="form-hint">Click the map to set the exact crisis location.</p>
+                    <div id="reportMap" class="report-map"></div>
+                    <input type="hidden" name="latitude" id="latInput">
+                    <input type="hidden" name="longitude" id="lngInput">
+                    <p class="location-display" id="locationDisplay">No location selected</p>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">
+            <span class="btn-text">Submit Crisis Report</span>
+            <span class="btn-loader" hidden>Submitting...</span>
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/feed.js' %}"></script>
+{% endblock %}

@@ -1,10 +1,166 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}{{ crisis.title }} — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/response.css' %}">
+<link rel="stylesheet" href="{% static 'css/feed.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="detail-wrapper">
+
+    <!-- LEFT: Main Content -->
+    <div class="detail-main">
+
+        <div class="detail-header">
+            <div class="detail-header__badges">
+                <span class="category-badge" style="background: {{ crisis.category.color|default:'#555' }}">
+                    {{ crisis.category.icon }} {{ crisis.category.name }}
+                </span>
+                <span class="severity-badge severity-badge--{{ crisis.severity }}">{{ crisis.severity }}</span>
+                <span class="status-badge status-badge--{{ crisis.status }}">{{ crisis.status }}</span>
+            </div>
+            <h1>{{ crisis.title }}</h1>
+            <div class="detail-header__meta">
+                <span>&#128205; {{ crisis.district }}</span>
+                <span>&#128100; {{ crisis.reported_by.username }}</span>
+                <span>&#128337; {{ crisis.created_at|timesince }} ago</span>
+            </div>
+        </div>
+
+        <p class="detail-description">{{ crisis.description }}</p>
+
+        <!-- MEDIA GALLERY -->
+        {% if crisis.media.all %}
+        <div class="media-gallery">
+            {% for media in crisis.media.all %}
+                {% if media.media_type == 'image' %}
+                <img src="{{ media.file.url }}" alt="Crisis media" class="media-gallery__item">
+                {% else %}
+                <video src="{{ media.file.url }}" controls class="media-gallery__item"></video>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- MAP PLACEHOLDER -->
+        {% if crisis.geotag %}
+        <div class="detail-map" id="crisisMap"
+             data-lat="{{ crisis.geotag.latitude }}"
+             data-lng="{{ crisis.geotag.longitude }}">
+        </div>
+        {% endif %}
+
+        <!-- STATUS TIMELINE -->
+        <div class="detail-section">
+            <h2 class="detail-section__title">Status Timeline</h2>
+            {% if crisis.status_updates.all %}
+            <div class="timeline">
+                {% for update in crisis.status_updates.all %}
+                <div class="timeline-item">
+                    <span class="timeline-item__dot status-badge status-badge--{{ update.new_status }}">{{ update.new_status }}</span>
+                    <div class="timeline-item__body">
+                        <p class="timeline-item__message">{{ update.message }}</p>
+                        <p class="timeline-item__meta">{{ update.posted_by.username }} · {{ update.created_at|timesince }} ago</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">No updates posted yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- ASSIGNED TEAMS -->
+        <div class="detail-section">
+            <h2 class="detail-section__title">Assigned Teams</h2>
+            {% if crisis.assignments.all %}
+            <div class="assigned-teams">
+                {% for assignment in crisis.assignments.all %}
+                <div class="assigned-team-card">
+                    <span class="team-type-badge team-type-badge--{{ assignment.team.team_type }}">{{ assignment.team.team_type }}</span>
+                    <div>
+                        <p class="assigned-team-card__name">{{ assignment.team.name }}</p>
+                        <p class="assigned-team-card__meta">{{ assignment.team.contact }} · Assigned {{ assignment.assigned_at|timesince }} ago</p>
+                        {% if assignment.note %}<p class="assigned-team-card__note">{{ assignment.note }}</p>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">No teams assigned yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div class="detail-sidebar">
+
+        <!-- UPVOTE -->
+        <div class="sidebar-card">
+            <p class="sidebar-card__label">Confirm this crisis is real</p>
+            <button class="upvote-btn {% if user_upvoted %}upvote-btn--active{% endif %}"
+                    id="upvoteBtn" data-id="{{ crisis.pk }}">
+                &#9650; <span id="upvoteCount">{{ upvote_count }}</span> Upvotes
+            </button>
+        </div>
+
+        <!-- ACTIONS -->
+        {% if request.user.is_authenticated %}
+        <div class="sidebar-card">
+            <p class="sidebar-card__label">Take Action</p>
+            <div class="sidebar-actions">
+                <a href="{% url 'volunteer_signup' crisis.pk %}" class="btn-action">&#9829; Volunteer</a>
+                <a href="{% url 'donate' crisis.pk %}" class="btn-action">&#128178; Donate</a>
+                {% if request.user.role.name == 'government' or request.user.is_staff %}
+                <a href="{% url 'assign_team' crisis.pk %}" class="btn-action btn-action--red">&#128657; Assign Team</a>
+                <a href="{% url 'post_status_update' crisis.pk %}" class="btn-action btn-action--red">&#128203; Update Status</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- VOLUNTEERS -->
+        <div class="sidebar-card">
+            <p class="sidebar-card__label">Volunteers ({{ crisis.volunteers.count }})</p>
+            {% for v in crisis.volunteers.all|slice:":5" %}
+            <div class="volunteer-row">
+                <span class="volunteer-row__name">{{ v.user.username }}</span>
+                <span class="volunteer-row__skill">{{ v.skill }}</span>
+                <span class="status-dot status-dot--{{ v.status }}"></span>
+            </div>
+            {% empty %}
+            <p class="empty-state">No volunteers yet.</p>
+            {% endfor %}
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'volunteer_signup' crisis.pk %}" class="btn-action" style="margin-top:0.75rem;">+ Join</a>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feed.js' %}"></script>
+{% if crisis.geotag %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const mapEl = document.getElementById('crisisMap');
+    if (mapEl) {
+        const lat = parseFloat(mapEl.dataset.lat);
+        const lng = parseFloat(mapEl.dataset.lng);
+        const map = L.map('crisisMap').setView([lat, lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([lat, lng]).addTo(map).bindPopup('{{ crisis.title }}').openPopup();
+    }
+</script>
+{% endif %}
+{% endblock %}

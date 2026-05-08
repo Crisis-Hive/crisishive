@@ -1,10 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %} {% load static %} {% block title %}Volunteer â€” {{ crisis.title }}{% endblock %} {% block extra_css %} {% endblock %} {% block content %} {% include 'partials/navbar.html' %}
+← Back to Crisis
 
-</body>
-</html>
+Volunteer Signup
+Signing up to help with: {{ crisis.title }}
+
+{% csrf_token %}
+What can you offer?
+{% for val, label in skill_choices %}
+{% if val == 'medical' %}⚕️ {% elif val == 'driving' %}🚙 {% elif val == 'food' %}🍴 {% elif val == 'logistics' %}📦 {% endif %} {{ label }}
+{% endfor %}
+ⓘ Your signup will be reviewed. You'll be contacted once accepted.
+
+Sign Up to Volunteer
+{% endblock %} {% block extra_js %} {% endblock %}

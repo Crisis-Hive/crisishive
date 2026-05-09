@@ -119,3 +119,4 @@ Werkzeug==3.1.5
 wheel==0.45.1
 wikipedia==1.4.0
 zope.interface==8.1.1
+gunicorn

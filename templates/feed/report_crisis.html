@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 <link rel="stylesheet" href="{% static 'css/response.css' %}">
 <link rel="stylesheet" href="{% static 'css/feed.css' %}">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 {% endblock %}
 
 {% block content %}
@@ -23,6 +22,7 @@
         {% csrf_token %}
 
         <div class="report-grid">
+            <!-- LEFT SIDE -->
             <div class="report-grid__left">
 
                 <div class="form-group">
@@ -82,14 +82,43 @@
 
             </div>
 
+            <!-- RIGHT SIDE — LOCATION -->
             <div class="report-grid__right">
                 <div class="form-group">
-                    <label>Pin Location on Map</label>
-                    <p class="form-hint">Click the map to set the exact crisis location.</p>
-                    <div id="reportMap" class="report-map"></div>
-                    <input type="hidden" name="latitude" id="latInput">
+                    <label>Crisis Location</label>
+                    <p class="form-hint">Use GPS to auto-detect or type the location name manually.</p>
+
+                    <!-- GPS Button -->
+                    <button type="button" class="btn-gps" id="gpsBtn">
+                        📍 Detect My Location
+                    </button>
+
+                    <!-- Location Name Display (after GPS) -->
+                    <div class="location-name-box" id="locationNameBox" style="display:none;">
+                        <span class="location-name-box__icon">✅</span>
+                        <span class="location-name-box__text" id="locationNameText"></span>
+                        <button type="button" class="location-name-box__clear" id="clearLocation">✕</button>
+                    </div>
+
+                    <!-- GPS Error -->
+                    <p class="location-error" id="locationError" style="display:none;"></p>
+
+                    <!-- Divider -->
+                    <div class="location-divider"><span>or enter manually</span></div>
+
+                    <!-- Manual Location Name Input -->
+                    <div class="form-group" style="margin-bottom:0;">
+                        <input type="text" id="manualLocation" placeholder="e.g. Mirpur 10, Dhaka"
+                            autocomplete="off">
+                        <p class="form-hint" style="margin-top:6px;">
+                            Type a place name — area, road, landmark etc.
+                        </p>
+                    </div>
+
+                    <!-- Hidden fields sent to backend -->
+                    <input type="hidden" name="latitude"  id="latInput">
                     <input type="hidden" name="longitude" id="lngInput">
-                    <p class="location-display" id="locationDisplay">No location selected</p>
+                    <input type="hidden" name="location_name" id="locationNameInput">
                 </div>
             </div>
         </div>
@@ -103,6 +132,114 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const gpsBtn           = document.getElementById('gpsBtn');
+const locationNameBox  = document.getElementById('locationNameBox');
+const locationNameText = document.getElementById('locationNameText');
+const locationError    = document.getElementById('locationError');
+const clearBtn         = document.getElementById('clearLocation');
+const latInput         = document.getElementById('latInput');
+const lngInput         = document.getElementById('lngInput');
+const locationNameInput= document.getElementById('locationNameInput');
+const manualLocation   = document.getElementById('manualLocation');
+
+// ── GPS Detection ──────────────────────────────────────────────
+gpsBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+        showError('GPS not supported by your browser.');
+        return;
+    }
+    gpsBtn.textContent = '⏳ Detecting...';
+    gpsBtn.disabled = true;
+    hideError();
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            latInput.value = lat.toFixed(6);
+            lngInput.value = lng.toFixed(6);
+
+            // Reverse geocode to get location name
+            try {
+                const res  = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+                );
+                const data = await res.json();
+                const name = buildLocationName(data);
+                showLocationName(name);
+                locationNameInput.value = name;
+            } catch {
+                // Fallback to coordinates if reverse geocode fails
+                const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                showLocationName(fallback);
+                locationNameInput.value = fallback;
+            }
+
+            gpsBtn.textContent = '📍 Detect My Location';
+            gpsBtn.disabled = false;
+        },
+        (error) => {
+            gpsBtn.textContent = '📍 Detect My Location';
+            gpsBtn.disabled = false;
+            const msgs = {
+                1: 'Location permission denied. Please allow access in your browser.',
+                2: 'Could not get position. Try manual entry below.',
+                3: 'Request timed out. Try again.',
+            };
+            showError(msgs[error.code] || 'Unknown error.');
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+    );
+});
+
+// ── Build readable name from Nominatim response ────────────────
+function buildLocationName(data) {
+    const a = data.address || {};
+    const parts = [
+        a.road || a.neighbourhood || a.suburb,
+        a.city || a.town || a.village || a.county,
+        a.state,
+        a.country,
+    ].filter(Boolean);
+    return parts.slice(0, 3).join(', ') || data.display_name || 'Unknown location';
+}
+
+// ── Manual input syncs to hidden field ────────────────────────
+manualLocation.addEventListener('input', () => {
+    locationNameInput.value = manualLocation.value;
+    // Clear GPS coords if user is typing manually
+    latInput.value = '';
+    lngInput.value = '';
+    if (manualLocation.value) {
+        showLocationName(manualLocation.value);
+    } else {
+        locationNameBox.style.display = 'none';
+    }
+});
+
+// ── Clear location ─────────────────────────────────────────────
+clearBtn.addEventListener('click', () => {
+    latInput.value = '';
+    lngInput.value = '';
+    locationNameInput.value = '';
+    manualLocation.value = '';
+    locationNameBox.style.display = 'none';
+    gpsBtn.textContent = '📍 Detect My Location';
+    gpsBtn.disabled = false;
+});
+
+function showLocationName(name) {
+    locationNameText.textContent = name;
+    locationNameBox.style.display = 'flex';
+}
+function showError(msg) {
+    locationError.textContent = '❌ ' + msg;
+    locationError.style.display = 'block';
+}
+function hideError() {
+    locationError.style.display = 'none';
+}
+</script>
 <script src="{% static 'js/feed.js' %}"></script>
 {% endblock %}

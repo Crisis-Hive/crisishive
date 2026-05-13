@@ -123,3 +123,4 @@ gunicorn
 python-dotenv
 django-allauth
 dj-database-url
+whitenoise

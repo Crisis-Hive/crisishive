@@ -121,3 +121,4 @@ wikipedia==1.4.0
 zope.interface==8.1.1
 gunicorn
 python-dotenv
+django-allauth

@@ -324,6 +324,10 @@ a:hover {
     display: none;
 }
 
+.navbar__mobile-menu {
+    display: none;
+}
+
 
 /* ── Responsive Navbar ── */
 

@@ -1,10 +1,204 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Profile — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<!-- ── Profile Hero ── -->
+<div class="profile-hero">
+    <div class="profile-hero__inner">
+        <div class="profile-avatar-wrap">
+            {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="Avatar" class="profile-avatar">
+            {% else %}
+                <div class="profile-avatar profile-avatar--placeholder">{{ request.user.username|first|upper }}</div>
+            {% endif %}
+            <label class="profile-avatar__edit" for="avatarInput" title="Change photo">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            </label>
+        </div>
+        <div class="profile-hero__info">
+            <h1>{{ request.user.username }}</h1>
+            <div class="profile-hero__badges">
+                <span class="badge badge--role">{{ request.user.role }}</span>
+                {% if profile.is_verified %}
+                <span class="badge badge--verified">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                    Verified
+                </span>
+                {% endif %}
+            </div>
+            <p class="profile-hero__email">{{ request.user.email }}</p>
+        </div>
+        <div class="profile-hero__stats">
+            <div class="profile-stat">
+                <span>{{ request.user.reported_crises.count }}</span>
+                <small>Reports</small>
+            </div>
+            <div class="profile-stat">
+                <span>{{ request.user.volunteer_signups.count }}</span>
+                <small>Volunteers</small>
+            </div>
+            <div class="profile-stat">
+                <span>{{ request.user.donations.count }}</span>
+                <small>Donations</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Profile Body ── -->
+<div class="profile-layout">
+
+    <!-- Tabs -->
+    <div class="profile-tabs">
+        <button class="profile-tab active" data-tab="edit">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            Edit Profile
+        </button>
+        <button class="profile-tab" data-tab="reports">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            My Reports
+        </button>
+        <button class="profile-tab" data-tab="volunteers">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Volunteers
+        </button>
+        <button class="profile-tab" data-tab="donations">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            Donations
+        </button>
+    </div>
+
+    <!-- Tab: Edit -->
+    <div class="profile-tab-content active" id="tab-edit">
+        <div class="profile-section">
+            <form method="POST" enctype="multipart/form-data" id="profileForm">
+                {% csrf_token %}
+                <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
+
+                <div class="profile-form-grid">
+                    <div class="pform-field">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" value="{{ request.user.username }}">
+                    </div>
+                    <div class="pform-field">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" name="phone" value="{{ profile.phone }}" placeholder="+880...">
+                    </div>
+                </div>
+
+                <div class="pform-field">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" name="bio" rows="4" placeholder="Tell the community about yourself...">{{ profile.bio }}</textarea>
+                </div>
+
+                <button type="submit" class="btn-profile-save">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tab: My Reports -->
+    <div class="profile-tab-content" id="tab-reports">
+        <div class="profile-section">
+            {% if request.user.reported_crises.all %}
+            <div class="profile-crisis-list">
+                {% for crisis in request.user.reported_crises.all %}
+                <a href="{% url 'crisis_detail' crisis.pk %}" class="profile-crisis-card post--{{ crisis.severity }}">
+                    <div class="profile-crisis-card__left">
+                        <span class="badge badge--severity badge--{{ crisis.severity }}">{{ crisis.severity }}</span>
+                        <div>
+                            <p class="profile-crisis-card__title">{{ crisis.title }}</p>
+                            <p class="profile-crisis-card__meta">
+                                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                {{ crisis.district }} · {{ crisis.created_at|timesince }} ago
+                            </p>
+                        </div>
+                    </div>
+                    <span class="badge badge--status badge--status-{{ crisis.status }}">{{ crisis.status }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="profile-empty">
+                <div class="profile-empty__icon">📡</div>
+                <p>No reports yet.</p>
+                <a href="{% url 'report_crisis' %}" class="btn-profile-action">Report a Crisis</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tab: Volunteers -->
+    <div class="profile-tab-content" id="tab-volunteers">
+        <div class="profile-section">
+            {% if request.user.volunteer_signups.all %}
+            <div class="profile-crisis-list">
+                {% for v in request.user.volunteer_signups.all %}
+                <div class="profile-crisis-card">
+                    <div class="profile-crisis-card__left">
+                        <span class="vol-status-dot vol-status-dot--{{ v.status }}"></span>
+                        <div>
+                            <p class="profile-crisis-card__title">{{ v.crisis.title }}</p>
+                            <p class="profile-crisis-card__meta">Skill: {{ v.skill }} · {{ v.status|capfirst }}</p>
+                        </div>
+                    </div>
+                    <span class="badge badge--vol-status badge--vol-{{ v.status }}">{{ v.status }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="profile-empty">
+                <div class="profile-empty__icon">🤝</div>
+                <p>No volunteer signups yet.</p>
+                <a href="{% url 'crisis_feed' %}" class="btn-profile-action">Browse Crises</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tab: Donations -->
+    <div class="profile-tab-content" id="tab-donations">
+        <div class="profile-section">
+            {% if request.user.donations.all %}
+            <div class="profile-crisis-list">
+                {% for d in request.user.donations.all %}
+                <div class="profile-crisis-card">
+                    <div class="profile-crisis-card__left">
+                        <div class="donation-icon">💚</div>
+                        <div>
+                            <p class="profile-crisis-card__title">{{ d.crisis.title }}</p>
+                            <p class="profile-crisis-card__meta">
+                                {% if d.amount %}৳{{ d.amount }}{% endif %}
+                                {% if d.resource %} · {{ d.resource }}{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="profile-empty">
+                <div class="profile-empty__icon">💚</div>
+                <p>No donations yet.</p>
+                <a href="{% url 'crisis_feed' %}" class="btn-profile-action">Find a Crisis to Support</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/profile.js' %}"></script>
+{% endblock %}

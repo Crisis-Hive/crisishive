@@ -1,10 +1,244 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Report a Crisis — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/response.css' %}">
+<link rel="stylesheet" href="{% static 'css/feed.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="form-page-wrapper form-page-wrapper--wide">
+    <div class="form-page-header">
+        <h1>Report a Crisis</h1>
+        <p class="form-page-header__sub">Be specific. Accurate reports save lives.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="action-form" id="reportForm">
+        {% csrf_token %}
+
+        <div class="report-grid">
+            <!-- LEFT SIDE -->
+            <div class="report-grid__left">
+
+                <div class="form-group">
+                    <label for="title">Crisis Title</label>
+                    <input type="text" id="title" name="title" placeholder="e.g. Flash flood in Demra" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4"
+                        placeholder="Describe what is happening, how many people are affected, what resources are needed..." required></textarea>
+                </div>
+
+                <div class="report-grid__row">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category" required>
+                            <option value="" disabled selected>Select type</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="severity">Severity</label>
+                        <select id="severity" name="severity" required>
+                            <option value="" disabled selected>Select level</option>
+                            {% for val, label in severity_choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="district">District</label>
+                        <select id="district" name="district" required>
+                            <option value="" disabled selected>Select district</option>
+                            {% for d in districts %}
+                            <option value="{{ d.id }}">{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- MEDIA UPLOAD -->
+                <div class="form-group">
+                    <label>Photos / Videos</label>
+                    <div class="dropzone" id="dropzone">
+                        <input type="file" name="media" id="mediaInput" multiple accept="image/*,video/*" hidden>
+                        <div class="dropzone__inner" id="dropzoneInner">
+                            <span class="dropzone__icon">&#128247;</span>
+                            <p>Drag & drop or <span class="dropzone__browse">browse</span></p>
+                            <p class="dropzone__hint">Images and videos accepted</p>
+                        </div>
+                        <div class="dropzone__preview" id="mediaPreview"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT SIDE — LOCATION -->
+            <div class="report-grid__right">
+                <div class="form-group">
+                    <label>Crisis Location</label>
+                    <p class="form-hint">Use GPS to auto-detect or type the location name manually.</p>
+
+                    <!-- GPS Button -->
+                    <button type="button" class="btn-gps" id="gpsBtn">
+                        📍 Detect My Location
+                    </button>
+
+                    <!-- Location Name Display (after GPS) -->
+                    <div class="location-name-box" id="locationNameBox" style="display:none;">
+                        <span class="location-name-box__icon">✅</span>
+                        <span class="location-name-box__text" id="locationNameText"></span>
+                        <button type="button" class="location-name-box__clear" id="clearLocation">✕</button>
+                    </div>
+
+                    <!-- GPS Error -->
+                    <p class="location-error" id="locationError" style="display:none;"></p>
+
+                    <!-- Divider -->
+                    <div class="location-divider"><span>or enter manually</span></div>
+
+                    <!-- Manual Location Name Input -->
+                    <div class="form-group" style="margin-bottom:0;">
+                        <input type="text" id="manualLocation" placeholder="e.g. Mirpur 10, Dhaka"
+                            autocomplete="off">
+                        <p class="form-hint" style="margin-top:6px;">
+                            Type a place name — area, road, landmark etc.
+                        </p>
+                    </div>
+
+                    <!-- Hidden fields sent to backend -->
+                    <input type="hidden" name="latitude"  id="latInput">
+                    <input type="hidden" name="longitude" id="lngInput">
+                    <input type="hidden" name="location_name" id="locationNameInput">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">
+            <span class="btn-text">Submit Crisis Report</span>
+            <span class="btn-loader" hidden>Submitting...</span>
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const gpsBtn           = document.getElementById('gpsBtn');
+const locationNameBox  = document.getElementById('locationNameBox');
+const locationNameText = document.getElementById('locationNameText');
+const locationError    = document.getElementById('locationError');
+const clearBtn         = document.getElementById('clearLocation');
+const latInput         = document.getElementById('latInput');
+const lngInput         = document.getElementById('lngInput');
+const locationNameInput= document.getElementById('locationNameInput');
+const manualLocation   = document.getElementById('manualLocation');
+
+// ── GPS Detection ──────────────────────────────────────────────
+gpsBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+        showError('GPS not supported by your browser.');
+        return;
+    }
+    gpsBtn.textContent = '⏳ Detecting...';
+    gpsBtn.disabled = true;
+    hideError();
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            latInput.value = lat.toFixed(6);
+            lngInput.value = lng.toFixed(6);
+
+            // Reverse geocode to get location name
+            try {
+                const res  = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+                );
+                const data = await res.json();
+                const name = buildLocationName(data);
+                showLocationName(name);
+                locationNameInput.value = name;
+            } catch {
+                // Fallback to coordinates if reverse geocode fails
+                const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                showLocationName(fallback);
+                locationNameInput.value = fallback;
+            }
+
+            gpsBtn.textContent = '📍 Detect My Location';
+            gpsBtn.disabled = false;
+        },
+        (error) => {
+            gpsBtn.textContent = '📍 Detect My Location';
+            gpsBtn.disabled = false;
+            const msgs = {
+                1: 'Location permission denied. Please allow access in your browser.',
+                2: 'Could not get position. Try manual entry below.',
+                3: 'Request timed out. Try again.',
+            };
+            showError(msgs[error.code] || 'Unknown error.');
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+    );
+});
+
+// ── Build readable name from Nominatim response ────────────────
+function buildLocationName(data) {
+    const a = data.address || {};
+    const parts = [
+        a.road || a.neighbourhood || a.suburb,
+        a.city || a.town || a.village || a.county,
+        a.state,
+        a.country,
+    ].filter(Boolean);
+    return parts.slice(0, 3).join(', ') || data.display_name || 'Unknown location';
+}
+
+// ── Manual input syncs to hidden field ────────────────────────
+manualLocation.addEventListener('input', () => {
+    locationNameInput.value = manualLocation.value;
+    // Clear GPS coords if user is typing manually
+    latInput.value = '';
+    lngInput.value = '';
+    if (manualLocation.value) {
+        showLocationName(manualLocation.value);
+    } else {
+        locationNameBox.style.display = 'none';
+    }
+});
+
+// ── Clear location ─────────────────────────────────────────────
+clearBtn.addEventListener('click', () => {
+    latInput.value = '';
+    lngInput.value = '';
+    locationNameInput.value = '';
+    manualLocation.value = '';
+    locationNameBox.style.display = 'none';
+    gpsBtn.textContent = '📍 Detect My Location';
+    gpsBtn.disabled = false;
+});
+
+function showLocationName(name) {
+    locationNameText.textContent = name;
+    locationNameBox.style.display = 'flex';
+}
+function showError(msg) {
+    locationError.textContent = '❌ ' + msg;
+    locationError.style.display = 'block';
+}
+function hideError() {
+    locationError.style.display = 'none';
+}
+</script>
+<script src="{% static 'js/feed.js' %}"></script>
+{% endblock %}

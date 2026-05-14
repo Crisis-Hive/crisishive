@@ -1,10 +1,110 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Register — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+
+    <!-- LEFT PANEL -->
+    <div class="auth-left">
+        <div class="auth-left__glow"></div>
+        <div class="auth-left__grid"></div>
+
+        <div class="auth-left__brand">
+            <div class="auth-brand-icon">🔴</div>
+            <span>CrisisHive</span>
+        </div>
+
+        <div class="auth-left__content">
+            <h1>Join the<br>Network.</h1>
+            <p>Every account is a new node in Bangladesh's crisis response grid.</p>
+        </div>
+
+        <div class="auth-left__roles">
+            <p class="auth-roles__label">Who can join?</p>
+            <div class="auth-role-pill">👤 General Public</div>
+            <div class="auth-role-pill">🚑 Relief Teams</div>
+            <div class="auth-role-pill">🏛️ Government Officials</div>
+            <div class="auth-role-pill">📰 Journalists</div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="auth-right">
+        <div class="auth-card">
+            <div class="auth-card__header">
+                <h2>Create Account</h2>
+                <p>Start reporting and responding</p>
+            </div>
+
+            {% if messages %}
+            <div class="auth-messages">
+                {% for message in messages %}
+                <div class="auth-alert auth-alert--{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'register' %}" id="registerForm">
+                {% csrf_token %}
+
+                <div class="auth-field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                    <span class="auth-field__error" id="emailError"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Display name" required autocomplete="username">
+                    <span class="auth-field__error" id="usernameError"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label for="password">Password</label>
+                    <div class="auth-input-wrap">
+                        <input type="password" id="password" name="password" placeholder="Min. 8 characters" required autocomplete="new-password">
+                        <button type="button" class="toggle-pw" id="togglePw" aria-label="Toggle password">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                    <span class="auth-field__error" id="passwordError"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label for="role">Your Role</label>
+                    <div class="auth-select-wrap">
+                        <select id="role" name="role" required>
+                            <option value="" disabled selected>Select your role</option>
+                            {% for role in roles %}
+                            <option value="{{ role.id }}">{{ role.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <svg class="auth-select-arrow" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                    </div>
+                    <span class="auth-field__error" id="roleError"></span>
+                </div>
+
+                <button type="submit" class="btn-auth" id="submitBtn">
+                    <span class="btn-auth__text">Create Account</span>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </form>
+
+            <p class="auth-switch">
+                Already have an account? <a href="{% url 'login' %}">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/register.js' %}"></script>
+{% endblock %}

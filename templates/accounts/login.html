@@ -10,59 +10,81 @@
 {% block content %}
 <div class="auth-wrapper">
 
+    <!-- LEFT PANEL -->
     <div class="auth-left">
-        <div class="brand">
-            <span class="brand__hex">&#9632;</span>
-            <span class="brand__name">CrisisHive</span>
+        <div class="auth-left__glow"></div>
+        <div class="auth-left__grid"></div>
+
+        <div class="auth-left__brand">
+            <div class="auth-brand-icon">🔴</div>
+            <span>CrisisHive</span>
         </div>
-        <div class="auth-left__tagline">
+
+        <div class="auth-left__content">
             <h1>Report.<br>Respond.<br>Recover.</h1>
             <p>Real-time crisis coordination for communities that refuse to wait.</p>
         </div>
+
         <div class="auth-left__stats">
-            <div class="stat">
-                <span class="stat__number">24</span>
-                <span class="stat__label">Active Crises</span>
+            <div class="auth-stat">
+                <span class="auth-stat__num">24</span>
+                <small>Active Crises</small>
             </div>
-            <div class="stat">
-                <span class="stat__number">8</span>
-                <span class="stat__label">Resolved Today</span>
+            <div class="auth-stat">
+                <span class="auth-stat__num">0</span>
+                <small>Resolved Today</small>
             </div>
-            <div class="stat">
-                <span class="stat__number">5</span>
-                <span class="stat__label">Teams Deployed</span>
+            <div class="auth-stat">
+                <span class="auth-stat__num">5</span>
+                <small>Teams Deployed</small>
             </div>
         </div>
     </div>
 
+    <!-- RIGHT PANEL -->
     <div class="auth-right">
         <div class="auth-card">
-            <h2 class="auth-card__title">Sign In</h2>
-            <p class="auth-card__sub">Access the crisis dashboard</p>
+            <div class="auth-card__header">
+                <h2>Sign In</h2>
+                <p>Access the crisis dashboard</p>
+            </div>
+
+            {% if messages %}
+            <div class="auth-messages">
+                {% for message in messages %}
+                <div class="auth-alert auth-alert--{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
             <form method="POST" action="{% url 'login' %}" id="loginForm">
                 {% csrf_token %}
-                <div class="form-group">
+
+                <div class="auth-field">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
-                    <span class="form-group__error" id="emailError"></span>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                    <span class="auth-field__error" id="emailError"></span>
                 </div>
-                <div class="form-group">
+
+                <div class="auth-field">
                     <label for="password">Password</label>
-                    <div class="input-wrap">
-                        <input type="password" id="password" name="password" placeholder="••••••••" required>
-                        <button type="button" class="toggle-pw" id="togglePw">Show</button>
+                    <div class="auth-input-wrap">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="toggle-pw" id="togglePw" aria-label="Toggle password">
+                            <svg id="eyeIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
                     </div>
-                    <span class="form-group__error" id="passwordError"></span>
+                    <span class="auth-field__error" id="passwordError"></span>
                 </div>
-                <button type="submit" class="btn-primary" id="submitBtn">
-                    <span class="btn-text">Sign In</span>
-                    <span class="btn-loader" hidden>...</span>
+
+                <button type="submit" class="btn-auth" id="submitBtn">
+                    <span class="btn-auth__text">Sign In</span>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </button>
             </form>
 
-            <p class="auth-card__switch">
-                Don't have an account? <a href="{% url 'register' %}">Register here</a>
+            <p class="auth-switch">
+                Don't have an account? <a href="{% url 'register' %}">Create one</a>
             </p>
         </div>
     </div>

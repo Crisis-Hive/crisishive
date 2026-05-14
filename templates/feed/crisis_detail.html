@@ -1,10 +1,255 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}{{ crisis.title }} — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/feed.css' %}">
+<link rel="stylesheet" href="{% static 'css/detail.css' %}">
+{% if crisis.geotag %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<!-- ── Detail Hero ── -->
+<div class="detail-hero">
+    <div class="detail-hero__inner">
+        <p class="detail-hero__back">
+            <a href="{% url 'crisis_feed' %}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Back to Feed
+            </a>
+        </p>
+        <div class="detail-hero__badges">
+            <span class="badge badge--category">{{ crisis.category.icon }} {{ crisis.category.name }}</span>
+            <span class="badge badge--severity badge--{{ crisis.severity }}">{{ crisis.severity|upper }}</span>
+            <span class="badge badge--status badge--status-{{ crisis.status }}">{{ crisis.status|upper }}</span>
+        </div>
+        <h1 class="detail-hero__title">{{ crisis.title }}</h1>
+        <div class="detail-hero__meta">
+            <span>
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ crisis.district }}
+            </span>
+            <span>
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                {{ crisis.reported_by.username }}
+            </span>
+            <span>
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                {{ crisis.created_at|timesince }} ago
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- ── Detail Layout ── -->
+<div class="detail-layout">
+
+    <!-- Main Content -->
+    <div class="detail-main">
+
+        <!-- Description -->
+        <div class="detail-card">
+            <h2 class="detail-card__title">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Situation Report
+            </h2>
+            <p class="detail-description">{{ crisis.description }}</p>
+        </div>
+
+        <!-- Media Gallery -->
+        {% if crisis.media.all %}
+        <div class="detail-card detail-card--media">
+            <h2 class="detail-card__title">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Media
+            </h2>
+            <div class="post__media post__media--count-{{ crisis.media.all|length }}">
+                {% for media in crisis.media.all %}
+                    {% if media.media_type == 'image' %}
+                    <div class="post__media-item">
+                        <img src="{{ media.file.url }}" alt="{{ crisis.title }}" loading="lazy">
+                    </div>
+                    {% else %}
+                    <div class="post__media-item">
+                        <video controls preload="metadata"><source src="{{ media.file.url }}"></video>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Map -->
+        {% if crisis.geotag %}
+        <div class="detail-card">
+            <h2 class="detail-card__title">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                Location
+            </h2>
+            <div class="detail-map" id="crisisMap"
+                 data-lat="{{ crisis.geotag.latitude }}"
+                 data-lng="{{ crisis.geotag.longitude }}"></div>
+        </div>
+        {% endif %}
+
+        <!-- Status Timeline -->
+        <div class="detail-card">
+            <h2 class="detail-card__title">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Status Timeline
+            </h2>
+            {% if crisis.status_updates.all %}
+            <div class="timeline">
+                {% for update in crisis.status_updates.all %}
+                <div class="timeline-item">
+                    <div class="timeline-item__line"></div>
+                    <div class="timeline-item__dot badge--status-{{ update.new_status }}"></div>
+                    <div class="timeline-item__body">
+                        <div class="timeline-item__header">
+                            <span class="badge badge--status badge--status-{{ update.new_status }}">{{ update.new_status|upper }}</span>
+                            <span class="timeline-item__time">{{ update.created_at|timesince }} ago · {{ update.posted_by.username }}</span>
+                        </div>
+                        <p class="timeline-item__message">{{ update.message }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="detail-empty">
+                <span>📡</span>
+                <p>No status updates yet.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Assigned Teams -->
+        <div class="detail-card">
+            <h2 class="detail-card__title">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                Assigned Teams
+            </h2>
+            {% if crisis.assignments.all %}
+            <div class="assigned-teams-grid">
+                {% for assignment in crisis.assignments.all %}
+                <div class="assigned-team-card">
+                    <div class="assigned-team-card__icon assigned-team-card__icon--{{ assignment.team.team_type }}">
+                        {% if assignment.team.team_type == 'medical' %}🏥
+                        {% elif assignment.team.team_type == 'fire' %}🔥
+                        {% elif assignment.team.team_type == 'rescue' %}⛑️
+                        {% elif assignment.team.team_type == 'ngo' %}🤝
+                        {% elif assignment.team.team_type == 'government' %}🏛️
+                        {% else %}🚨{% endif %}
+                    </div>
+                    <div class="assigned-team-card__body">
+                        <span class="team-type-badge team-type-badge--{{ assignment.team.team_type }}">{{ assignment.team.team_type }}</span>
+                        <p class="assigned-team-card__name">{{ assignment.team.name }}</p>
+                        <p class="assigned-team-card__meta">{{ assignment.team.contact }} · Assigned {{ assignment.assigned_at|timesince }} ago</p>
+                        {% if assignment.note %}
+                        <p class="assigned-team-card__note">"{{ assignment.note }}"</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="detail-empty">
+                <span>🚒</span>
+                <p>No teams assigned yet.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div class="detail-sidebar">
+
+        <!-- Upvote -->
+        <div class="detail-sidebar-card">
+            <p class="detail-sidebar-card__label">Verify this report</p>
+            <button class="upvote-btn {% if user_upvoted %}upvote-btn--active{% endif %}" id="upvoteBtn" data-id="{{ crisis.pk }}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                <span id="upvoteCount">{{ upvote_count }}</span> Upvotes
+            </button>
+        </div>
+
+        <!-- Actions -->
+        {% if request.user.is_authenticated %}
+        <div class="detail-sidebar-card">
+            <p class="detail-sidebar-card__label">Take Action</p>
+            <div class="detail-actions">
+                <a href="{% url 'volunteer_signup' crisis.pk %}" class="btn-detail-action">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                    Volunteer
+                </a>
+                <a href="{% url 'donate' crisis.pk %}" class="btn-detail-action">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                    Donate
+                </a>
+                {% if request.user.role.name == 'government' or request.user.is_staff %}
+                <a href="{% url 'assign_team' crisis.pk %}" class="btn-detail-action btn-detail-action--red">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                    Assign Team
+                </a>
+                <a href="{% url 'post_status_update' crisis.pk %}" class="btn-detail-action btn-detail-action--red">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    Update Status
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Volunteers -->
+        <div class="detail-sidebar-card">
+            <p class="detail-sidebar-card__label">Volunteers ({{ crisis.volunteers.count }})</p>
+            {% for v in crisis.volunteers.all|slice:":6" %}
+            <div class="volunteer-row">
+                <div class="volunteer-row__avatar">{{ v.user.username|first|upper }}</div>
+                <div class="volunteer-row__info">
+                    <span class="volunteer-row__name">{{ v.user.username }}</span>
+                    <span class="volunteer-row__skill">{{ v.skill }}</span>
+                </div>
+                <span class="vol-dot vol-dot--{{ v.status }}"></span>
+            </div>
+            {% empty %}
+            <p class="detail-sidebar-empty">No volunteers yet.</p>
+            {% endfor %}
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'volunteer_signup' crisis.pk %}" class="btn-detail-action" style="margin-top: 0.75rem; width: 100%; justify-content: center;">
+                + Join as Volunteer
+            </a>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feed.js' %}"></script>
+{% if crisis.geotag %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const mapEl = document.getElementById('crisisMap');
+    if (mapEl) {
+        const lat = parseFloat(mapEl.dataset.lat);
+        const lng = parseFloat(mapEl.dataset.lng);
+        const map = L.map('crisisMap').setView([lat, lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        const marker = L.circleMarker([lat, lng], {
+            radius: 10, color: '#E8001D', fillColor: '#E8001D', fillOpacity: 0.8, weight: 2
+        }).addTo(map);
+        marker.bindPopup('<strong>{{ crisis.title }}</strong><br>{{ crisis.district }}').openPopup();
+    }
+</script>
+{% endif %}
+{% endblock %}

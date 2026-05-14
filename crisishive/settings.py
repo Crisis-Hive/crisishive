@@ -30,6 +30,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://crisishive.up.railway.app',
+]
 
 # Application definition
 

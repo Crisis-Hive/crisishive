@@ -69,11 +69,21 @@ def crisis_detail(request, pk):
 @login_required
 def report_crisis(request):
     if request.method == 'POST':
-        title = request.POST.get('title')
-        description = request.POST.get('description')
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
         category_id = request.POST.get('category')
         severity = request.POST.get('severity')
         district_id = request.POST.get('district')
+
+        if not title or not description or not category_id or not severity or not district_id:
+            from django.contrib import messages
+            messages.error(request, 'All fields are required.')
+            context = {
+                'categories': Category.objects.all(),
+                'districts': District.objects.all(),
+                'severity_choices': Crisis.SEVERITY_CHOICES,
+            }
+            return render(request, 'feed/report_crisis.html', context)
 
         crisis = Crisis.objects.create(
             title=title,
@@ -84,9 +94,28 @@ def report_crisis(request):
             reported_by=request.user,
         )
 
+        # Save GeoTag if coordinates were provided
+        latitude = request.POST.get('latitude', '').strip()
+        longitude = request.POST.get('longitude', '').strip()
+        location_name = request.POST.get('location_name', '').strip()
+        if latitude and longitude:
+            from location.models import GeoTag
+            geotag = GeoTag.objects.create(
+                latitude=latitude,
+                longitude=longitude,
+                address=location_name,
+            )
+            crisis.geotag = geotag
+            crisis.save()
+
         # Handle media uploads
         for f in request.FILES.getlist('media'):
-            media_type = 'image' if f.content_type.startswith('image') else 'video'
+            if f.content_type.startswith('image'):
+                media_type = 'image'
+            elif f.content_type.startswith('video'):
+                media_type = 'video'
+            else:
+                continue  # skip unsupported file types
             CrisisMedia.objects.create(
                 crisis=crisis,
                 file=f,

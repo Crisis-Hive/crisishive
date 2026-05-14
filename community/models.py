@@ -22,7 +22,7 @@ class Volunteer(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     signed_up_at = models.DateTimeField(auto_now_add=True)
 
-    def _str_(self):
+    def __str__(self):
         return f"{self.user.email} volunteering for {self.crisis.title}"
 
 
@@ -34,8 +34,5 @@ class Donation(models.Model):
     message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def _str_(self):
+    def __str__(self):
         return f"Donation by {self.donor.email} to {self.crisis.title}"
-
-
-

@@ -1,14 +1,79 @@
-{% extends 'base.html' %} {% load static %} {% block title %}Donate â€” {{ crisis.title }}{% endblock %} {% block extra_css %} {% endblock %} {% block content %} {% include 'partials/navbar.html' %}
-← Back to Crisis
+{% extends 'base.html' %}
+{% load static %}
 
-Make a Donation
-Supporting: {{ crisis.title }} Â· {{ crisis.district }}
+{% block title %}Donate — {{ crisis.title }}{% endblock %}
 
-{% csrf_token %}
-💲 Money 📦 Resources Both
-Amount (BDT à§³)
-e.g. 500
-Personal Message (optional)
-A message of support...
-Confirm Donation
-{% endblock %} {% block extra_js %} {% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/response.css' %}">
+<link rel="stylesheet" href="{% static 'css/community.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="form-page-wrapper">
+
+    <div class="form-page-header">
+        <p class="form-page-header__back">
+            <a href="{% url 'crisis_detail' crisis.pk %}">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Back to Crisis
+            </a>
+        </p>
+        <h1>Make a Donation</h1>
+        <p class="form-page-header__sub">Supporting: <strong>{{ crisis.title }}</strong> · {{ crisis.district }}</p>
+    </div>
+
+    <form method="POST" class="action-form" id="donateForm">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Donation Type</label>
+            <div class="donate-type-toggle">
+                <button type="button" class="donate-toggle-btn active" data-type="money">💲 Money</button>
+                <button type="button" class="donate-toggle-btn" data-type="resources">📦 Resources</button>
+                <button type="button" class="donate-toggle-btn" data-type="both">Both</button>
+            </div>
+            <input type="hidden" name="donation_type" id="donationType" value="money">
+        </div>
+
+        <div class="form-group" id="amountGroup">
+            <label for="amount">Amount <span class="optional">(BDT ৳)</span></label>
+            <input type="number" id="amount" name="amount" placeholder="e.g. 500" min="1">
+        </div>
+
+        <div class="form-group" id="resourceGroup" style="display:none;">
+            <label for="resource">Resource Description</label>
+            <input type="text" id="resource" name="resource" placeholder="e.g. 50kg rice, blankets, medicine">
+        </div>
+
+        <div class="form-group">
+            <label for="message">Personal Message <span class="optional">(optional)</span></label>
+            <textarea id="message" name="message" rows="3" placeholder="A message of support..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary">Confirm Donation</button>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const toggleBtns = document.querySelectorAll('.donate-toggle-btn');
+const donationType = document.getElementById('donationType');
+const amountGroup = document.getElementById('amountGroup');
+const resourceGroup = document.getElementById('resourceGroup');
+
+toggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        toggleBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const type = btn.dataset.type;
+        donationType.value = type;
+        amountGroup.style.display   = (type === 'money'     || type === 'both') ? 'flex' : 'none';
+        resourceGroup.style.display = (type === 'resources' || type === 'both') ? 'flex' : 'none';
+    });
+});
+</script>
+{% endblock %}

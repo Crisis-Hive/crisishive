@@ -6,6 +6,9 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/feed.css' %}">
 <link rel="stylesheet" href="{% static 'css/detail.css' %}">
+{% if crisis.geotag %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -232,7 +235,6 @@
 {% block extra_js %}
 <script src="{% static 'js/feed.js' %}"></script>
 {% if crisis.geotag %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const mapEl = document.getElementById('crisisMap');

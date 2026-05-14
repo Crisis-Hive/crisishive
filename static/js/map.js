@@ -2,9 +2,9 @@
 
 const severityColors = {
     critical: '#E8001D',
-    high:     '#ff6d00',
-    medium:   '#ffd600',
-    low:      '#00c853',
+    high: '#ff6d00',
+    medium: '#ffd600',
+    low: '#00c853',
 };
 
 // Init map centered on Bangladesh
@@ -49,6 +49,7 @@ window.CRISIS_DATA.forEach(crisis => {
     allMarkers.push(marker);
 });
 
+
 // ── Filters ──
 function applyFilters() {
     const districtVal = document.getElementById('districtFilter').value.toLowerCase();
@@ -56,6 +57,9 @@ function applyFilters() {
         document.querySelectorAll('.severity-checks input:checked')
     ).map(cb => cb.value);
 
+    let visible = 0;
+
+    // Filter map markers
     allMarkers.forEach(marker => {
         const c = marker.crisisData;
         const districtMatch = !districtVal || (c.district && c.district.toLowerCase() === districtVal);
@@ -63,13 +67,38 @@ function applyFilters() {
 
         if (districtMatch && severityMatch) {
             marker.addTo(map);
+            visible++;
         } else {
             map.removeLayer(marker);
         }
     });
+
+    // Filter sidebar list items
+    document.querySelectorAll('.map-crisis-item').forEach(item => {
+        const itemDistrict = (item.dataset.district || '').toLowerCase();
+        const itemSeverity = item.dataset.severity;
+        const districtMatch = !districtVal || itemDistrict === districtVal;
+        const severityMatch = checkedSeverities.includes(itemSeverity);
+
+        item.classList.toggle('hidden', !(districtMatch && severityMatch));
+    });
+
+    // Update count
+    const countEl = document.getElementById('crisisCount');
+    if (countEl) countEl.textContent = visible + ' active crises';
 }
 
 document.getElementById('districtFilter').addEventListener('change', applyFilters);
 document.querySelectorAll('.severity-checks input').forEach(cb => {
     cb.addEventListener('change', applyFilters);
 });
+
+// Reset filters
+const resetBtn = document.getElementById('resetFilters');
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+        document.getElementById('districtFilter').value = '';
+        document.querySelectorAll('.severity-checks input').forEach(cb => cb.checked = true);
+        applyFilters();
+    });
+}

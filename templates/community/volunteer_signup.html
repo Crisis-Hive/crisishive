@@ -1,15 +1,63 @@
-{% extends 'base.html' %} {% load static %} {% block title %}Volunteer â€” {{ crisis.title }}{% endblock %} {% block extra_css %} {% endblock %} {% block content %} {% include 'partials/navbar.html' %}
-← Back to Crisis
+{% extends 'base.html' %}
+{% load static %}
 
-Volunteer Signup
-Signing up to help with: {{ crisis.title }}
+{% block title %}Volunteer — {{ crisis.title }}{% endblock %}
 
-{% csrf_token %}
-What can you offer?
-{% for val, label in skill_choices %}
-{% if val == 'medical' %}⚕️ {% elif val == 'driving' %}🚙 {% elif val == 'food' %}🍴 {% elif val == 'logistics' %}📦 {% endif %} {{ label }}
-{% endfor %}
-ⓘ Your signup will be reviewed. You'll be contacted once accepted.
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/response.css' %}">
+<link rel="stylesheet" href="{% static 'css/community.css' %}">
+{% endblock %}
 
-Sign Up to Volunteer
-{% endblock %} {% block extra_js %} {% endblock %}
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="form-page-wrapper">
+
+    <div class="form-page-header">
+        <p class="form-page-header__back">
+            <a href="{% url 'crisis_detail' crisis.pk %}">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Back to Crisis
+            </a>
+        </p>
+        <h1>Volunteer Signup</h1>
+        <p class="form-page-header__sub">Signing up to help with: <strong>{{ crisis.title }}</strong></p>
+    </div>
+
+    <form method="POST" class="action-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>What can you offer?</label>
+            <div class="skill-options">
+                {% for val, label in skill_choices %}
+                <label class="skill-option">
+                    <input type="radio" name="skill" value="{{ val }}" required>
+                    <div class="skill-option__card">
+                        <span class="skill-option__icon">
+                            {% if val == 'medical' %}⚕️
+                            {% elif val == 'driving' %}🚙
+                            {% elif val == 'food' %}🍴
+                            {% elif val == 'logistics' %}📦
+                            {% elif val == 'search_rescue' %}⛑️
+                            {% elif val == 'communication' %}📡
+                            {% else %}🤝{% endif %}
+                        </span>
+                        <span class="skill-option__label">{{ label }}</span>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="volunteer-note">
+            ℹ️ Your signup will be reviewed. You'll be contacted once accepted.
+        </div>
+
+        <button type="submit" class="btn-primary">Sign Up to Volunteer</button>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}{% endblock %}

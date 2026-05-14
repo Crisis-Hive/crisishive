@@ -4,7 +4,6 @@
 {% block title %}Crisis Map — CrisisHive{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
 <link rel="stylesheet" href="{% static 'css/map.css' %}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 {% endblock %}
@@ -17,7 +16,7 @@
     <!-- SIDE PANEL -->
     <div class="map-panel">
         <h2 class="map-panel__title">Crisis Map</h2>
-        <p class="map-panel__sub">{{ crisis_data|length }} active crises</p>
+        <p class="map-panel__sub" id="crisisCount">{{ crisis_count }} active crises</p>
 
         <div class="map-filters">
             <label class="map-filter-label">Filter by District</label>
@@ -35,6 +34,8 @@
                 <label><input type="checkbox" value="medium" checked> <span class="sev-dot sev-dot--medium"></span> Medium</label>
                 <label><input type="checkbox" value="low" checked> <span class="sev-dot sev-dot--low"></span> Low</label>
             </div>
+
+            <button class="map-reset-btn" id="resetFilters">Reset Filters</button>
         </div>
 
         <div class="map-legend">
@@ -43,6 +44,22 @@
             <div class="legend-item"><span class="legend-dot" style="background:#ff6d00"></span> High</div>
             <div class="legend-item"><span class="legend-dot" style="background:#ffd600"></span> Medium</div>
             <div class="legend-item"><span class="legend-dot" style="background:#00c853"></span> Low</div>
+        </div>
+
+        <!-- Crisis List -->
+        <div class="map-crisis-list" id="mapCrisisList">
+            <p class="map-filter-label" style="margin-bottom:0.5rem">Pinned Crises</p>
+            {% for crisis in crises %}
+            <a href="{% url 'crisis_detail' crisis.pk %}" class="map-crisis-item map-crisis-item--{{ crisis.severity }}" data-district="{{ crisis.district.name|default:'' }}" data-severity="{{ crisis.severity }}">
+                <span class="map-crisis-item__sev"></span>
+                <div class="map-crisis-item__body">
+                    <p class="map-crisis-item__title">{{ crisis.title|truncatechars:42 }}</p>
+                    <p class="map-crisis-item__meta">{{ crisis.district }}{% if crisis.category %} · {{ crisis.category }}{% endif %}</p>
+                </div>
+            </a>
+            {% empty %}
+            <p class="map-panel__sub">No geotagged crises yet.</p>
+            {% endfor %}
         </div>
     </div>
 

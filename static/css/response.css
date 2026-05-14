@@ -312,3 +312,234 @@
     font-size: 0.9rem;
     padding: 1.5rem 0;
 }
+
+
+/* ═══════════════════════════════════════════
+   Report Crisis Form — Extended Styles
+   ═══════════════════════════════════════════ */
+
+.form-page-wrapper--wide {
+    max-width: 960px;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.75rem;
+    align-items: start;
+}
+
+.report-grid__left,
+.report-grid__right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.report-grid__row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.form-group select {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.8rem 1rem;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23888' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    padding-right: 2.2rem;
+}
+
+.form-group select:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px var(--red-glow);
+}
+
+.form-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+
+/* ── Dropzone ── */
+
+.dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    background: var(--bg-3);
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.dropzone:hover,
+.dropzone.drag-over {
+    border-color: var(--red);
+    background: rgba(232, 0, 29, 0.04);
+}
+
+.dropzone__inner {
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+.dropzone__icon {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+    opacity: 0.6;
+}
+
+.dropzone__browse {
+    color: var(--red);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.dropzone__hint {
+    font-size: 0.75rem;
+    color: #555;
+}
+
+.dropzone__preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem;
+}
+
+.dropzone__preview:empty {
+    display: none;
+}
+
+.dropzone__thumb {
+    width: 72px;
+    height: 72px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+}
+
+
+/* ── GPS / Location ── */
+
+.btn-gps {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.65rem 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-gps:hover {
+    border-color: rgba(232, 0, 29, 0.35);
+    color: var(--red);
+    background: rgba(232, 0, 29, 0.06);
+}
+
+.btn-gps:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.location-name-box {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(0, 200, 83, 0.07);
+    border: 1px solid rgba(0, 200, 83, 0.25);
+    border-radius: 6px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.85rem;
+    color: #69f0ae;
+}
+
+.location-name-box__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.location-name-box__clear {
+    background: none;
+    border: none;
+    color: rgba(105, 240, 174, 0.6);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+.location-name-box__clear:hover {
+    color: #69f0ae;
+}
+
+.location-error {
+    font-size: 0.8rem;
+    color: #ff6b6b;
+    background: rgba(232, 0, 29, 0.07);
+    border: 1px solid rgba(232, 0, 29, 0.2);
+    border-radius: 6px;
+    padding: 0.55rem 0.9rem;
+}
+
+.location-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+}
+
+.location-divider::before,
+.location-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+    .report-grid {
+        grid-template-columns: 1fr;
+    }
+    .report-grid__row {
+        grid-template-columns: 1fr;
+    }
+}

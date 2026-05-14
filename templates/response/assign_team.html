@@ -4,56 +4,136 @@
 {% block title %}Assign Team — {{ crisis.title }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
 <link rel="stylesheet" href="{% static 'css/response.css' %}">
 {% endblock %}
 
 {% block content %}
 {% include 'partials/navbar.html' %}
 
-<div class="form-page-wrapper">
-    <div class="form-page-header">
-        <p class="form-page-header__back"><a href="{% url 'crisis_detail' crisis.pk %}">&#8592; Back to Crisis</a></p>
-        <h1>Assign Response Team</h1>
-        <p class="form-page-header__sub">Crisis: <strong>{{ crisis.title }}</strong> · {{ crisis.district }} · <span class="severity-badge severity-badge--{{ crisis.severity }}">{{ crisis.severity }}</span></p>
+<!-- ── Page Hero ── -->
+<div class="response-hero">
+    <div class="response-hero__inner">
+        <div class="response-hero__text">
+            <p class="response-hero__back">
+                <a href="{% url 'crisis_detail' crisis.pk %}">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                    Back to Crisis
+                </a>
+            </p>
+            <h1>Assign Response Team</h1>
+            <div class="response-hero__meta">
+                <span class="response-hero__crisis-title">{{ crisis.title }}</span>
+                <span class="response-hero__dot">·</span>
+                <span class="response-hero__district">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    {{ crisis.district }}
+                </span>
+                <span class="badge badge--severity badge--{{ crisis.severity }}">{{ crisis.severity|upper }}</span>
+                <span class="badge badge--status badge--status-{{ crisis.status }}">{{ crisis.status|upper }}</span>
+            </div>
+        </div>
+        <div class="response-hero__stat">
+            <span>{{ teams|length }}</span>
+            <small>Available Teams</small>
+        </div>
     </div>
+</div>
 
-    <form method="POST" class="action-form">
+<!-- ── Main Content ── -->
+<div class="response-layout">
+
+    <form method="POST" class="response-form" id="assignForm">
         {% csrf_token %}
 
-        <div class="form-group">
-            <label>Select Team</label>
-            <div class="team-list">
+        <!-- Team Grid -->
+        <div class="response-section">
+            <div class="response-section__header">
+                <h2>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                    Select Response Team
+                </h2>
+                <p class="response-section__sub">Choose the team best suited for this crisis type and location.</p>
+            </div>
+
+            <div class="team-grid">
                 {% for team in teams %}
-                <label class="team-option">
+                <label class="team-card" data-type="{{ team.team_type }}">
                     <input type="radio" name="team" value="{{ team.id }}" required>
-                    <div class="team-option__card">
-                        <div class="team-option__top">
-                            <span class="team-type-badge team-type-badge--{{ team.team_type }}">{{ team.team_type }}</span>
-                            <span class="team-option__name">{{ team.name }}</span>
+                    <div class="team-card__inner">
+                        <div class="team-card__top">
+                            <div class="team-card__icon team-card__icon--{{ team.team_type }}">
+                                {% if team.team_type == 'medical' %}🏥
+                                {% elif team.team_type == 'fire' %}🔥
+                                {% elif team.team_type == 'rescue' %}⛑️
+                                {% elif team.team_type == 'ngo' %}🤝
+                                {% elif team.team_type == 'government' %}🏛️
+                                {% else %}🚨{% endif %}
+                            </div>
+                            <div class="team-card__check">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                            </div>
                         </div>
-                        <div class="team-option__meta">
-                            <span>&#128205; {{ team.district }}</span>
-                            <span>&#128222; {{ team.contact }}</span>
-                            <span>Leader: {{ team.leader.username }}</span>
+                        <div class="team-card__body">
+                            <span class="team-type-badge team-type-badge--{{ team.team_type }}">{{ team.team_type }}</span>
+                            <h3 class="team-card__name">{{ team.name }}</h3>
+                        </div>
+                        <div class="team-card__footer">
+                            <div class="team-card__detail">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                {{ team.district }}
+                            </div>
+                            <div class="team-card__detail">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14v2.92z"/></svg>
+                                {{ team.contact }}
+                            </div>
+                            <div class="team-card__detail">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                {{ team.leader.username }}
+                            </div>
                         </div>
                     </div>
                 </label>
                 {% empty %}
-                <p class="empty-state">No active teams available.</p>
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-state__icon">🚨</div>
+                    <p>No active teams available.</p>
+                    <p style="font-size: 0.85rem; opacity: 0.6;">Contact the operations center to activate a team.</p>
+                </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="note">Special Instructions <span class="optional">(optional)</span></label>
-            <textarea id="note" name="note" rows="3" placeholder="Any notes for the team..."></textarea>
+        <!-- Special Instructions -->
+        <div class="response-section response-section--compact">
+            <div class="response-section__header">
+                <h2>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Special Instructions
+                    <span class="optional-tag">optional</span>
+                </h2>
+            </div>
+            <textarea
+                id="note"
+                name="note"
+                rows="4"
+                class="response-textarea"
+                placeholder="Any notes, access codes, hazards, or coordination details for the team..."></textarea>
         </div>
 
-        <button type="submit" class="btn-primary">Assign Team</button>
+        <!-- Submit -->
+        <div class="response-submit">
+            <button type="submit" class="btn-assign">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                Assign Team
+            </button>
+            <a href="{% url 'crisis_detail' crisis.pk %}" class="btn-cancel">Cancel</a>
+        </div>
+
     </form>
+
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script src="{% static 'js/response.js' %}"></script>
 {% endblock %}

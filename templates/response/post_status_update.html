@@ -4,45 +4,115 @@
 {% block title %}Post Status Update — {{ crisis.title }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
 <link rel="stylesheet" href="{% static 'css/response.css' %}">
 {% endblock %}
 
 {% block content %}
 {% include 'partials/navbar.html' %}
 
-<div class="form-page-wrapper">
-    <div class="form-page-header">
-        <p class="form-page-header__back"><a href="{% url 'crisis_detail' crisis.pk %}">&#8592; Back to Crisis</a></p>
-        <h1>Post Status Update</h1>
-        <p class="form-page-header__sub">Crisis: <strong>{{ crisis.title }}</strong> · Current status: <span class="status-badge status-badge--{{ crisis.status }}">{{ crisis.status }}</span></p>
+<!-- ── Page Hero ── -->
+<div class="response-hero">
+    <div class="response-hero__inner">
+        <div class="response-hero__text">
+            <p class="response-hero__back">
+                <a href="{% url 'crisis_detail' crisis.pk %}">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                    Back to Crisis
+                </a>
+            </p>
+            <h1>Post Status Update</h1>
+            <div class="response-hero__meta">
+                <span class="response-hero__crisis-title">{{ crisis.title }}</span>
+                <span class="response-hero__dot">·</span>
+                <span>Current:&nbsp;</span>
+                <span class="badge badge--status badge--status-{{ crisis.status }}">{{ crisis.status|upper }}</span>
+            </div>
+        </div>
+        <div class="response-hero__icon-wrap">
+            <div class="response-hero__broadcast-icon">
+                <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M1 6C1 6 5 2 12 2s11 4 11 4M5 10s2-2 7-2 7 2 7 2M9 14s1-1 3-1 3 1 3 1M12 18h.01"/></svg>
+            </div>
+        </div>
     </div>
+</div>
 
-    <form method="POST" class="action-form">
+<!-- ── Main Content ── -->
+<div class="response-layout">
+
+    <form method="POST" class="response-form" id="statusForm">
         {% csrf_token %}
 
-        <div class="form-group">
-            <label>New Status</label>
-            <div class="status-options">
+        <!-- Status Picker -->
+        <div class="response-section">
+            <div class="response-section__header">
+                <h2>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    New Status
+                </h2>
+                <p class="response-section__sub">Select the current operational status of this crisis.</p>
+            </div>
+
+            <div class="status-grid">
                 {% for val, label in status_choices %}
-                <label class="status-option status-option--{{ val }}">
+                <label class="status-card status-card--{{ val }}">
                     <input type="radio" name="new_status" value="{{ val }}" {% if crisis.status == val %}checked{% endif %} required>
-                    <span>{{ label }}</span>
+                    <div class="status-card__inner">
+                        <div class="status-card__icon">
+                            {% if val == 'ongoing' %}🔴
+                            {% elif val == 'responding' %}🔵
+                            {% elif val == 'resolved' %}🟢
+                            {% else %}⚪{% endif %}
+                        </div>
+                        <div class="status-card__check">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                        </div>
+                        <span class="status-card__label">{{ label }}</span>
+                        <p class="status-card__desc">
+                            {% if val == 'ongoing' %}Situation active, no response yet
+                            {% elif val == 'responding' %}Teams are on-site and responding
+                            {% elif val == 'resolved' %}Crisis has been contained
+                            {% else %}{{ label }}{% endif %}
+                        </p>
+                    </div>
                 </label>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="message">Update Message</label>
-            <textarea id="message" name="message" rows="4" placeholder="Describe the current situation on the ground..." required></textarea>
+        <!-- Update Message -->
+        <div class="response-section response-section--compact">
+            <div class="response-section__header">
+                <h2>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    Update Message
+                    <span class="required-tag">required</span>
+                </h2>
+            </div>
+            <textarea
+                id="message"
+                name="message"
+                rows="5"
+                class="response-textarea"
+                placeholder="Describe the current situation on the ground — what teams are doing, conditions, next steps..."
+                required></textarea>
+            <p class="response-textarea__hint">This message will be visible to all responders and community members monitoring this crisis.</p>
         </div>
 
-        <button type="submit" class="btn-primary">Post Update</button>
+        <!-- Submit -->
+        <div class="response-submit">
+            <button type="submit" class="btn-assign btn-assign--broadcast">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                Post Update
+            </button>
+            <a href="{% url 'crisis_detail' crisis.pk %}" class="btn-cancel">Cancel</a>
+        </div>
+
     </form>
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/response.js' %}"></script>
+
 {% endblock %}

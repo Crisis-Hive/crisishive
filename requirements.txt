@@ -6,3 +6,4 @@ django-allauth
 dj-database-url
 whitenoise
 psycopg[binary]
+pillow

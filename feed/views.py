@@ -6,7 +6,7 @@ from django.contrib import messages
 from .models import Crisis, Category, CrisisMedia, Upvote
 from location.models import District, GeoTag
 
-def crisis_feed(request ):
+def crisis_feed(request):
     crises = Crisis.objects.select_related('category', 'reported_by', 'district').prefetch_related('media').annotate(
         upvote_count=Count('upvotes')
     )

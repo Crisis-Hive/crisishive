@@ -23,8 +23,9 @@ def crisis_map(request):
         })
 
     context = {
-        'crisis_data_json': json.dumps(map_data),
-        'total_count': crises_with_location.count(),
+        'crisis_data': json.dumps(map_data),
+        'crisis_count': crises_with_location.count(),
+        'crises': crises_with_location,
         'districts': District.objects.all(),
     }
     return render(request, 'location/crisis_map.html', context)

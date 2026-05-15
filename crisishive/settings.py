@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',
 
     'accounts.apps.AccountsConfig',
     'feed.apps.FeedConfig',
@@ -136,7 +135,6 @@ USE_TZ = True
 
 
 # Static files
-SITE_ID = 1
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'

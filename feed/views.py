@@ -8,6 +8,19 @@ from datetime import timedelta
 from .models import Crisis, Category, CrisisMedia, Upvote
 from location.models import District, GeoTag
 
+
+def landing(request):
+    if request.user.is_authenticated:
+        return redirect('crisis_feed')
+    total_crises = Crisis.objects.count()
+    active_crises = Crisis.objects.filter(status='ongoing').count()
+    resolved_crises = Crisis.objects.filter(status='resolved').count()
+    return render(request, 'feed/landing.html', {
+        'total_crises': total_crises,
+        'active_crises': active_crises,
+        'resolved_crises': resolved_crises,
+    })
+
 def crisis_feed(request):
     crises = Crisis.objects.select_related('category', 'reported_by', 'district').prefetch_related('media').annotate(
         upvote_count=Count('upvotes')

@@ -6,6 +6,62 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/map.css' %}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+    .map-wrapper {
+        height: calc(100vh - 70px);
+        display: flex;
+    }
+    .map-panel {
+        width: 350px;
+        background: #111;
+        border-right: 1px solid #222;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    .map-container {
+        flex: 1;
+        background: #0a0a0a;
+    }
+    .popup-content {
+        padding: 5px;
+        color: #333;
+    }
+    .popup-content__title {
+        font-weight: 700;
+        margin-bottom: 5px;
+        font-size: 1rem;
+    }
+    .popup-content__meta {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 10px;
+    }
+    .popup-btn {
+        display: inline-block;
+        background: #E8001D;
+        color: #fff !important;
+        padding: 5px 12px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .custom-marker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .marker-pin {
+        width: 20px;
+        height: 20px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        border: 2px solid #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -15,50 +71,42 @@
 
     <!-- SIDE PANEL -->
     <div class="map-panel">
-        <h2 class="map-panel__title">Crisis Map</h2>
-        <p class="map-panel__sub" id="crisisCount">{{ crisis_count }} active crises</p>
+        <h2 class="map-panel__title" style="font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #fff;">Crisis Map</h2>
+        <p class="map-panel__sub" id="crisisCount" style="color: #888; margin-bottom: 20px;">{{ crisis_count }} active crises</p>
 
         <div class="map-filters">
-            <label class="map-filter-label">Filter by District</label>
-            <select id="districtFilter">
+            <label class="map-filter-label" style="color: #fff; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Filter by District</label>
+            <select id="districtFilter" style="width: 100%; background: #222; color: #fff; border: 1px solid #333; padding: 8px; border-radius: 4px; margin-bottom: 15px;">
                 <option value="">All Districts</option>
                 {% for d in districts %}
                 <option value="{{ d.name }}">{{ d.name }}</option>
                 {% endfor %}
             </select>
 
-            <label class="map-filter-label">Filter by Severity</label>
-            <div class="severity-checks">
-                <label><input type="checkbox" value="critical" checked> <span class="sev-dot sev-dot--critical"></span> Critical</label>
-                <label><input type="checkbox" value="high" checked> <span class="sev-dot sev-dot--high"></span> High</label>
-                <label><input type="checkbox" value="medium" checked> <span class="sev-dot sev-dot--medium"></span> Medium</label>
-                <label><input type="checkbox" value="low" checked> <span class="sev-dot sev-dot--low"></span> Low</label>
+            <label class="map-filter-label" style="color: #fff; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Filter by Severity</label>
+            <div class="severity-checks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <label style="color: #888; font-size: 0.85rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" value="critical" checked> Critical</label>
+                <label style="color: #888; font-size: 0.85rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" value="high" checked> High</label>
+                <label style="color: #888; font-size: 0.85rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" value="medium" checked> Medium</label>
+                <label style="color: #888; font-size: 0.85rem; display: flex; align-items: center; gap: 5px;"><input type="checkbox" value="low" checked> Low</label>
             </div>
 
-            <button class="map-reset-btn" id="resetFilters">Reset Filters</button>
+            <button class="map-reset-btn" id="resetFilters" style="width: 100%; background: transparent; border: 1px solid #E8001D; color: #E8001D; padding: 8px; border-radius: 4px; cursor: pointer; transition: all 0.3s;">Reset Filters</button>
         </div>
 
-        <div class="map-legend">
-            <p class="map-filter-label">Legend</p>
-            <div class="legend-item"><span class="legend-dot" style="background:#E8001D"></span> Critical</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#ff6d00"></span> High</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#ffd600"></span> Medium</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#00c853"></span> Low</div>
-        </div>
-
-        <!-- Crisis List -->
-        <div class="map-crisis-list" id="mapCrisisList">
-            <p class="map-filter-label" style="margin-bottom:0.5rem">Pinned Crises</p>
+        <div class="map-crisis-list" id="mapCrisisList" style="margin-top: 30px; flex: 1; overflow-y: auto;">
+            <p class="map-filter-label" style="color: #fff; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Pinned Crises</p>
             {% for crisis in crises %}
-            <a href="{% url 'crisis_detail' crisis.pk %}" class="map-crisis-item map-crisis-item--{{ crisis.severity }}" data-district="{{ crisis.district.name|default:'' }}" data-severity="{{ crisis.severity }}">
-                <span class="map-crisis-item__sev"></span>
-                <div class="map-crisis-item__body">
-                    <p class="map-crisis-item__title">{{ crisis.title|truncatechars:42 }}</p>
-                    <p class="map-crisis-item__meta">{{ crisis.district }}{% if crisis.category %} · {{ crisis.category }}{% endif %}</p>
-                </div>
-            </a>
+            <div class="map-crisis-item" 
+                 style="background: #1a1a1a; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid {% if crisis.severity == 'critical' %}#E8001D{% elif crisis.severity == 'high' %}#ff6d00{% elif crisis.severity == 'medium' %}#ffd600{% else %}#00c853{% endif %}; cursor: pointer;"
+                 onclick="focusMarker({{ crisis.geotag.latitude }}, {{ crisis.geotag.longitude }}, {{ crisis.id }})"
+                 data-district="{{ crisis.district.name|default:'' }}" 
+                 data-severity="{{ crisis.severity }}">
+                <p style="color: #fff; font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">{{ crisis.title|truncatechars:35 }}</p>
+                <p style="color: #666; font-size: 0.75rem;">{{ crisis.district }} · {{ crisis.category }}</p>
+            </div>
             {% empty %}
-            <p class="map-panel__sub">No geotagged crises yet.</p>
+            <p style="color: #666; font-size: 0.85rem;">No geotagged crises yet.</p>
             {% endfor %}
         </div>
     </div>
@@ -68,7 +116,6 @@
 
 </div>
 
-<!-- Pass crisis data to JS -->
 <script>
     window.CRISIS_DATA = {{ crisis_data|safe }};
 </script>
@@ -76,5 +123,88 @@
 
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{% static 'js/map.js' %}"></script>
+<script>
+    const severityColors = {
+        critical: '#E8001D',
+        high: '#ff6d00',
+        medium: '#ffd600',
+        low: '#00c853',
+    };
+
+    const map = L.map('crisisMap').setView([23.8103, 90.4125], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const markers = {};
+
+    window.CRISIS_DATA.forEach(crisis => {
+        const color = severityColors[crisis.severity] || '#888';
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div class="marker-pin" style="background: ${color}"></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 20]
+        });
+
+        const marker = L.marker([crisis.lat, crisis.lng], { icon: icon }).addTo(map);
+        
+        marker.bindPopup(`
+            <div class="popup-content">
+                <p class="popup-content__title">${crisis.title}</p>
+                <p class="popup-content__meta">${crisis.category} · ${crisis.severity.toUpperCase()}</p>
+                <a href="/crisis/${crisis.id}/" class="popup-btn">View Details</a>
+            </div>
+        `);
+
+        marker.crisisData = crisis;
+        markers[crisis.id] = marker;
+    });
+
+    function focusMarker(lat, lng, id) {
+        map.setView([lat, lng], 14);
+        markers[id].openPopup();
+    }
+
+    // Filter Logic
+    function applyFilters() {
+        const districtVal = document.getElementById('districtFilter').value.toLowerCase();
+        const checkedSeverities = Array.from(
+            document.querySelectorAll('.severity-checks input:checked')
+        ).map(cb => cb.value);
+
+        let visibleCount = 0;
+
+        Object.values(markers).forEach(marker => {
+            const c = marker.crisisData;
+            const districtMatch = !districtVal || (c.district && c.district.toLowerCase() === districtVal);
+            const severityMatch = checkedSeverities.includes(c.severity);
+
+            if (districtMatch && severityMatch) {
+                marker.addTo(map);
+                visibleCount++;
+            } else {
+                map.removeLayer(marker);
+            }
+        });
+
+        document.querySelectorAll('.map-crisis-item').forEach(item => {
+            const itemDistrict = (item.dataset.district || '').toLowerCase();
+            const itemSeverity = item.dataset.severity;
+            const districtMatch = !districtVal || itemDistrict === districtVal;
+            const severityMatch = checkedSeverities.includes(itemSeverity);
+            item.style.display = (districtMatch && severityMatch) ? 'block' : 'none';
+        });
+
+        document.getElementById('crisisCount').textContent = visibleCount + ' active crises';
+    }
+
+    document.getElementById('districtFilter').addEventListener('change', applyFilters);
+    document.querySelectorAll('.severity-checks input').forEach(cb => cb.addEventListener('change', applyFilters));
+    document.getElementById('resetFilters').addEventListener('click', () => {
+        document.getElementById('districtFilter').value = '';
+        document.querySelectorAll('.severity-checks input').forEach(cb => cb.checked = true);
+        applyFilters();
+    });
+</script>
 {% endblock %}

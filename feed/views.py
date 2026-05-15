@@ -261,5 +261,6 @@ def dashboard_view(request):
         'date_labels': date_labels,
         'date_counts': date_counts,
         'heatmap_data': heatmap_data,
+        'total_crises': sum(severity_counts),
     }
     return render(request, 'feed/dashboard.html', context)

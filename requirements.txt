@@ -1,9 +1,8 @@
-
-Django==5.2.13
+Django>=5.2.13,<6.0
 gunicorn
 python-dotenv
-django-allauth
+django-allauth[account]
 dj-database-url
 whitenoise
-psycopg[binary]
+psycopg2-binary
 pillow

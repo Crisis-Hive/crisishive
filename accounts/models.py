@@ -1,12 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+
 class Role(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
 
     def __str__(self):
         return self.name
+
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
@@ -19,10 +21,13 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    # username is kept in the DB for AbstractUser / admin compatibility,
+    # but it is no longer required at signup — allauth won't ask for it.
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.email
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

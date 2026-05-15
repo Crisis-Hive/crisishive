@@ -2,7 +2,6 @@ from django.db import models
 from accounts.models import User
 from location.models import District, GeoTag
 
-
 class Category(models.Model):
     name = models.CharField(max_length=100)
     icon = models.CharField(max_length=50, blank=True)   # emoji or icon slug
@@ -13,7 +12,6 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories"
-
 
 class Crisis(models.Model):
     SEVERITY_CHOICES = [
@@ -46,7 +44,6 @@ class Crisis(models.Model):
         ordering = ['-created_at']
         verbose_name_plural = "Crises"
 
-
 class CrisisMedia(models.Model):
     MEDIA_TYPE_CHOICES = [
         ('image', 'Image'),
@@ -60,7 +57,6 @@ class CrisisMedia(models.Model):
 
     def __str__(self):
         return f"{self.media_type} for {self.crisis.title}"
-
 
 class Upvote(models.Model):
     crisis = models.ForeignKey(Crisis, on_delete=models.CASCADE, related_name='upvotes')

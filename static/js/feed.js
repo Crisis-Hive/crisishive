@@ -59,6 +59,8 @@ if (dropzone && mediaInput) {
     dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropzone.classList.remove('dragover');
+        // FIX: Sync dropped files to the hidden input so they are included in form submission
+        mediaInput.files = e.dataTransfer.files;
         handleFiles(e.dataTransfer.files);
     });
 

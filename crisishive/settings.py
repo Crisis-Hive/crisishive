@@ -148,13 +148,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 STATIC_URL = '/static/'
 
-# Fix: Only add the static directory if it exists to avoid Railway deployment warnings
-STATICFILES_DIRS = []
-_static_dir = BASE_DIR / 'static'
-if _static_dir.exists():
-    STATICFILES_DIRS.append(_static_dir)
-
+# Fix: Ensure the static directories exist to avoid Railway deployment warnings
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Create directories if they don't exist (prevents WhiteNoise/Django warnings)
+os.makedirs(STATIC_ROOT, exist_ok=True)
+os.makedirs(BASE_DIR / 'static', exist_ok=True)
 
 STORAGES = {
     'default': {
@@ -184,3 +184,5 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 WHITENOISE_USE_FINDERS = True
+# Prevent WhiteNoise from crashing if files are missing during startup
+WHITENOISE_MANIFEST_STRICT = False

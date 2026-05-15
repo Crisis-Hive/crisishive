@@ -5,11 +5,21 @@ from dotenv import load_dotenv
 import dj_database_url
 import os
 from pathlib import Path
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# --- ROBUST DIRECTORY CREATION (MUST BE BEFORE MIDDLEWARE LOADS) ---
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_DIR = BASE_DIR / 'static'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+os.makedirs(STATIC_ROOT, exist_ok=True)
+os.makedirs(STATIC_DIR, exist_ok=True)
+os.makedirs(MEDIA_ROOT, exist_ok=True)
+# ------------------------------------------------------------------
 
 def env_bool(name, default=False):
     value = os.environ.get(name)
@@ -64,8 +74,10 @@ INSTALLED_APPS = [
     'response.apps.ResponseConfig',
     'location.apps.LocationConfig',
     'community.apps.CommunityConfig',
+    
     'allauth',
     'allauth.account',
+    'allauth.socialaccount', # Often required to avoid middleware init errors
 ]
 
 # Required for django.contrib.sites
@@ -144,17 +156,9 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 STATIC_URL = '/static/'
-
-# Fix: Ensure the static directories exist to avoid Railway deployment warnings
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-
-# Create directories if they don't exist (prevents WhiteNoise/Django warnings)
-os.makedirs(STATIC_ROOT, exist_ok=True)
-os.makedirs(BASE_DIR / 'static', exist_ok=True)
+STATICFILES_DIRS = [STATIC_DIR]
 
 STORAGES = {
     'default': {
@@ -173,16 +177,12 @@ AUTHENTICATION_BACKENDS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ------------------------------------------------------------------
-# django-allauth 65.x settings
-# LOGIN_METHODS must be a set of strings (not a dict)
+# django-allauth settings
 # ------------------------------------------------------------------
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-# We still have a username column on the User model (for admin / AbstractUser
-# compatibility), but allauth should not try to collect it at signup.
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 WHITENOISE_USE_FINDERS = True
-# Prevent WhiteNoise from crashing if files are missing during startup
 WHITENOISE_MANIFEST_STRICT = False

@@ -4,27 +4,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import User, Role, Profile
 
-# Allauth authentication system utility managers
+# Allauth core authentication backend utilities
 from allauth.account.utils import perform_login
 from allauth.account.adapter import get_adapter
 
 
 def _unique_username(email):
-    """Derive a unique username from the email address safely."""
+    """Derive a clean unique username string from the email address safely."""
     if not email or '@' not in email:
         return "user"
-        
-    # FIX: Get the element at index 0, then slice it as a string
+    # Extract the clean string prefix before the @ symbol
     base = email.split('@')[0][:130]
-    
     username = base
     counter = 1
     while User.objects.filter(username=username).exists():
         username = f"{base}{counter}"
         counter += 1
     return username
-
-
 
 
 def _get_roles():
@@ -38,7 +34,9 @@ def _get_roles():
 def register(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
-        username = request.POST.get('username', '').strip() or _unique_username(email)
+        # Fallback to email prefix if the user leaves username empty
+        username_input = request.POST.get('username', '').strip()
+        username = username_input if username_input else _unique_username(email)
         password = request.POST.get('password')
         role_id = request.POST.get('role')
 
@@ -50,11 +48,11 @@ def register(request):
             messages.error(request, "Email already registered.")
             return render(request, 'accounts/register.html', {'roles': _get_roles()})
 
-        # FIX: Since USERNAME_FIELD is email, the first positional argument is the email field
+        # Securely pass BOTH parameters to satisfy database column constraints
         user = User.objects.create_user(
             username=username,
             email=email,
-            password=password,
+            password=password
         )
 
         if role_id:
@@ -64,10 +62,10 @@ def register(request):
             except (ValueError, TypeError):
                 pass
 
-        # Create user profile safety tracking records
+        # Ensure profile creation record tracking matches up flawlessly
         Profile.objects.get_or_create(user=user)
 
-        # Authenticate with Allauth backend layers to drop 500 crashes
+        # Authenticate session inside active Allauth context tracking pools
         perform_login(
             request, 
             user, 
@@ -76,7 +74,7 @@ def register(request):
             signup=True
         )
         
-        messages.success(request, f"Welcome, {username or email}!")
+        messages.success(request, f"Welcome, {username}!")
         return redirect('crisis_feed')
 
     return render(request, 'accounts/register.html', {'roles': _get_roles()})
@@ -101,7 +99,7 @@ def login_view(request):
             else:
                 messages.error(request, "Invalid email or password.")
         except Exception:
-            messages.error(request, "Authentication backend processing failure.")
+            messages.error(request, "Authentication failed. Check your input credentials.")
 
     return render(request, 'accounts/login.html')
 

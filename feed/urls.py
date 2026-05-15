@@ -10,4 +10,5 @@ urlpatterns = [
     path('crisis/<int:pk>/delete/', views.delete_crisis, name='delete_crisis'),
     path('crisis/<int:pk>/upvote/', views.toggle_upvote, name='toggle_upvote'),
     path('media/<int:media_pk>/delete/', views.delete_media, name='delete_media'),
+    path('dashboard/', views.dashboard_view, name='dashboard'), # New dashboard URL
 ]

@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.db.models import Count
+from django.db.models import Count, Case, When, IntegerField
 from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
 from .models import Crisis, Category, CrisisMedia, Upvote
 from location.models import District, GeoTag
 
@@ -35,7 +37,6 @@ def crisis_feed(request):
         crises = crises.order_by('-upvote_count')
     elif sort == 'critical':
         # Custom ordering for severity
-        from django.db.models import Case, When, IntegerField
         crises = crises.annotate(
             severity_priority=Case(
                 When(severity='critical', then=1),
@@ -218,3 +219,47 @@ def toggle_upvote(request, pk):
     if not created:
         upvote.delete()
     return JsonResponse({'upvoted': created, 'count': crisis.upvotes.count()})
+
+
+@login_required
+def dashboard_view(request):
+    # 1. Severity Distribution
+    severity_data = Crisis.objects.values('severity').annotate(count=Count('severity')).order_by('severity')
+    severity_labels = [item['severity'].capitalize() for item in severity_data]
+    severity_counts = [item['count'] for item in severity_data]
+
+    # 2. Crises by District
+    district_data = Crisis.objects.values('district__name').annotate(count=Count('district__name')).order_by('-count')
+    district_labels = [item['district__name'] for item in district_data]
+    district_counts = [item['count'] for item in district_data]
+
+    # 3. Reporting Trends (last 7 days)
+    today = timezone.now().date()
+    date_counts = []
+    date_labels = []
+    for i in range(7):
+        date = today - timedelta(days=6 - i)
+        count = Crisis.objects.filter(created_at__date=date).count()
+        date_labels.append(date.strftime('%b %d'))
+        date_counts.append(count)
+
+    # 4. Heatmap Data (GeoTags)
+    heatmap_data = []
+    geotagged_crises = Crisis.objects.filter(geotag__isnull=False).select_related('geotag')
+    for crisis in geotagged_crises:
+        heatmap_data.append({
+            'lat': float(crisis.geotag.latitude),
+            'lng': float(crisis.geotag.longitude),
+            'count': 1 # Each point represents one crisis
+        })
+
+    context = {
+        'severity_labels': severity_labels,
+        'severity_counts': severity_counts,
+        'district_labels': district_labels,
+        'district_counts': district_counts,
+        'date_labels': date_labels,
+        'date_counts': date_counts,
+        'heatmap_data': heatmap_data,
+    }
+    return render(request, 'feed/dashboard.html', context)

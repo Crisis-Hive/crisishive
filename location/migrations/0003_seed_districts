@@ -1,0 +1,102 @@
+from django.db import migrations
+
+DISTRICTS = [
+    # Barisal Division
+    ("Barisal", "Barisal"),
+    ("Barguna", "Barisal"),
+    ("Bhola", "Barisal"),
+    ("Jhalokati", "Barisal"),
+    ("Patuakhali", "Barisal"),
+    ("Pirojpur", "Barisal"),
+    # Chittagong Division
+    ("Bandarban", "Chittagong"),
+    ("Brahmanbaria", "Chittagong"),
+    ("Chandpur", "Chittagong"),
+    ("Chittagong", "Chittagong"),
+    ("Comilla", "Chittagong"),
+    ("Cox's Bazar", "Chittagong"),
+    ("Feni", "Chittagong"),
+    ("Khagrachhari", "Chittagong"),
+    ("Lakshmipur", "Chittagong"),
+    ("Noakhali", "Chittagong"),
+    ("Rangamati", "Chittagong"),
+    # Dhaka Division
+    ("Dhaka", "Dhaka"),
+    ("Faridpur", "Dhaka"),
+    ("Gazipur", "Dhaka"),
+    ("Gopalganj", "Dhaka"),
+    ("Kishoreganj", "Dhaka"),
+    ("Madaripur", "Dhaka"),
+    ("Manikganj", "Dhaka"),
+    ("Munshiganj", "Dhaka"),
+    ("Narayanganj", "Dhaka"),
+    ("Narsingdi", "Dhaka"),
+    ("Rajbari", "Dhaka"),
+    ("Shariatpur", "Dhaka"),
+    ("Tangail", "Dhaka"),
+    # Khulna Division
+    ("Bagerhat", "Khulna"),
+    ("Chuadanga", "Khulna"),
+    ("Jessore", "Khulna"),
+    ("Jhenaidah", "Khulna"),
+    ("Khulna", "Khulna"),
+    ("Kushtia", "Khulna"),
+    ("Magura", "Khulna"),
+    ("Meherpur", "Khulna"),
+    ("Narail", "Khulna"),
+    ("Satkhira", "Khulna"),
+    # Mymensingh Division
+    ("Jamalpur", "Mymensingh"),
+    ("Mymensingh", "Mymensingh"),
+    ("Netrokona", "Mymensingh"),
+    ("Sherpur", "Mymensingh"),
+    # Rajshahi Division
+    ("Bogra", "Rajshahi"),
+    ("Chapai Nawabganj", "Rajshahi"),
+    ("Joypurhat", "Rajshahi"),
+    ("Naogaon", "Rajshahi"),
+    ("Natore", "Rajshahi"),
+    ("Pabna", "Rajshahi"),
+    ("Rajshahi", "Rajshahi"),
+    ("Sirajganj", "Rajshahi"),
+    # Rangpur Division
+    ("Dinajpur", "Rangpur"),
+    ("Gaibandha", "Rangpur"),
+    ("Kurigram", "Rangpur"),
+    ("Lalmonirhat", "Rangpur"),
+    ("Nilphamari", "Rangpur"),
+    ("Panchagarh", "Rangpur"),
+    ("Rangpur", "Rangpur"),
+    ("Thakurgaon", "Rangpur"),
+    # Sylhet Division
+    ("Habiganj", "Sylhet"),
+    ("Moulvibazar", "Sylhet"),
+    ("Sunamganj", "Sylhet"),
+    ("Sylhet", "Sylhet"),
+]
+
+
+def seed_districts(apps, schema_editor):
+    District = apps.get_model("location", "District")
+    if District.objects.exists():
+        return  # Already seeded, skip
+    District.objects.bulk_create([
+        District(name=name, division=division)
+        for name, division in DISTRICTS
+    ])
+
+
+def unseed_districts(apps, schema_editor):
+    District = apps.get_model("location", "District")
+    District.objects.all().delete()
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("location", "0002_alter_district_name"),
+    ]
+
+    operations = [
+        migrations.RunPython(seed_districts, unseed_districts),
+    ]

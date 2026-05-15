@@ -11,7 +11,7 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- ROBUST DIRECTORY CREATION (MUST BE BEFORE MIDDLEWARE LOADS) ---
+# --- ROBUST DIRECTORY CREATION ---
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_DIR = BASE_DIR / 'static'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -19,7 +19,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 os.makedirs(STATIC_ROOT, exist_ok=True)
 os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(MEDIA_ROOT, exist_ok=True)
-# ------------------------------------------------------------------
+# --------------------------------
 
 def env_bool(name, default=False):
     value = os.environ.get(name)
@@ -67,7 +67,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',  # Required by allauth
+    'django.contrib.sites',
 
     'accounts.apps.AccountsConfig',
     'feed.apps.FeedConfig',
@@ -77,15 +77,14 @@ INSTALLED_APPS = [
     
     'allauth',
     'allauth.account',
-    'allauth.socialaccount', # Often required to avoid middleware init errors
+    'allauth.socialaccount',
 ]
 
-# Required for django.contrib.sites
 SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # WhiteNoise MUST be after SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -160,6 +159,7 @@ MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [STATIC_DIR]
 
+# Use a simpler storage backend that doesn't crash if manifest is missing
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',

@@ -1,4 +1,4 @@
-Django>=5.2.13,<6.0
+Django>=5.0,<5.2
 gunicorn
 python-dotenv
 django-allauth[account]

@@ -42,11 +42,11 @@
                 <small>Reports</small>
             </div>
             <div class="profile-stat">
-                <span>{{ request.user.volunteer_signups.count }}</span>
+                <span>{{ request.user.volunteer_actions.count }}</span>
                 <small>Volunteers</small>
             </div>
             <div class="profile-stat">
-                <span>{{ request.user.donations.count }}</span>
+                <span>{{ request.user.donation_set.count }}</span>
                 <small>Donations</small>
             </div>
         </div>
@@ -141,9 +141,9 @@
     <!-- Tab: Volunteers -->
     <div class="profile-tab-content" id="tab-volunteers">
         <div class="profile-section">
-            {% if request.user.volunteer_signups.all %}
+            {% if request.user.volunteer_actions.all %}
             <div class="profile-crisis-list">
-                {% for v in request.user.volunteer_signups.all %}
+                {% for v in request.user.volunteer_actions.all %}
                 <div class="profile-crisis-card">
                     <div class="profile-crisis-card__left">
                         <span class="vol-status-dot vol-status-dot--{{ v.status }}"></span>
@@ -169,9 +169,9 @@
     <!-- Tab: Donations -->
     <div class="profile-tab-content" id="tab-donations">
         <div class="profile-section">
-            {% if request.user.donations.all %}
+            {% if request.user.donation_set.all %}
             <div class="profile-crisis-list">
-                {% for d in request.user.donations.all %}
+                {% for d in request.user.donation_set.all %}
                 <div class="profile-crisis-card">
                     <div class="profile-crisis-card__left">
                         <div class="donation-icon">💚</div>

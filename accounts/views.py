@@ -13,8 +13,11 @@ def _unique_username(email):
     """Derive a clean unique username string from the email address safely."""
     if not email or '@' not in email:
         return "user"
-    # Extract the clean string prefix before the @ symbol
-    base = email.split('@')[0][:130]
+    
+    # FIX: Select index 0 FIRST to grab the raw string before slicing characters
+    parts = email.split('@')
+    base = parts[0][:130] if parts else "user"
+    
     username = base
     counter = 1
     while User.objects.filter(username=username).exists():

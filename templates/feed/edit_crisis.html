@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Crisis — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/response.css' %}">
+<link rel="stylesheet" href="{% static 'css/feed.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="form-page-wrapper form-page-wrapper--wide">
+    <div class="form-page-header">
+        <p class="form-page-header__back">
+            <a href="{% url 'crisis_detail' crisis.pk %}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Back to Report
+            </a>
+        </p>
+        <h1>Edit Crisis Report</h1>
+        <p class="form-page-header__sub">Update the details below. Your changes are logged.</p>
+    </div>
+
+    <!-- MAIN EDIT FORM — no nested forms inside -->
+    <form method="POST" enctype="multipart/form-data" class="action-form" id="editForm">
+        {% csrf_token %}
+
+        <div class="report-grid">
+            <!-- LEFT SIDE -->
+            <div class="report-grid__left">
+
+                <div class="form-group">
+                    <label for="title">Crisis Title</label>
+                    <input type="text" id="title" name="title" value="{{ crisis.title }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="5" required>{{ crisis.description }}</textarea>
+                </div>
+
+                <div class="report-grid__row">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if crisis.category.id == cat.id %}selected{% endif %}>
+                                {{ cat.icon }} {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="severity">Severity</label>
+                        <select id="severity" name="severity" required>
+                            {% for val, label in severity_choices %}
+                            <option value="{{ val }}" {% if crisis.severity == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="district">District</label>
+                        <select id="district" name="district" required>
+                            {% for d in districts %}
+                            <option value="{{ d.id }}" {% if crisis.district.id == d.id %}selected{% endif %}>{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ADD NEW MEDIA -->
+                <div class="form-group">
+                    <label>Add More Photos / Videos</label>
+                    <div class="dropzone" id="dropzone">
+                        <input type="file" name="media" id="mediaInput" multiple accept="image/*,video/*" hidden>
+                        <div class="dropzone__inner" id="dropzoneInner">
+                            <span class="dropzone__icon">📎</span>
+                            <p>Drag & drop or <span class="dropzone__browse">browse</span></p>
+                            <p class="dropzone__hint">Images and videos accepted</p>
+                        </div>
+                        <div class="dropzone__preview" id="mediaPreview"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT SIDE — no forms here, only buttons that trigger JS -->
+            <div class="report-grid__right">
+                <div class="form-group">
+                    <label>Existing Media</label>
+                    {% if crisis.media.all %}
+                    <div class="media-manage-list" id="mediaManageList">
+                        {% for m in crisis.media.all %}
+                        <div class="media-manage-item" id="media-item-{{ m.pk }}">
+                            {% if m.media_type == 'image' %}
+                            <img src="{{ m.file.url }}" alt="media" class="media-manage-item__thumb">
+                            {% else %}
+                            <div class="media-manage-item__thumb media-manage-item__thumb--video">🎬</div>
+                            {% endif %}
+                            <span class="media-manage-item__type">{{ m.media_type }}</span>
+                            <div class="media-manage-item__del">
+                                <button type="button" title="Remove"
+                                        data-media-id="{{ m.pk }}"
+                                        data-csrf="{{ csrf_token }}"
+                                        onclick="deleteMedia(this)">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="form-hint" id="noMediaMsg">No media attached to this report.</p>
+                    {% endif %}
+                </div>
+
+                <div class="edit-danger-zone">
+                    <p class="edit-danger-zone__label">Danger Zone</p>
+                    <button type="button" class="btn-danger-delete" onclick="confirmDeleteCrisis()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                        Delete This Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="edit-form-actions">
+            <button type="submit" class="btn-primary">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Changes
+            </button>
+            <a href="{% url 'crisis_detail' crisis.pk %}" class="btn-cancel-edit">Cancel</a>
+        </div>
+
+    </form>
+    <!-- END MAIN FORM -->
+
+    <!-- Delete-crisis form lives OUTSIDE the main form -->
+    <form method="POST" action="{% url 'delete_crisis' crisis.pk %}" id="deleteCrisisForm" style="display:none;">
+        {% csrf_token %}
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feed.js' %}"></script>
+<script>
+function confirmDeleteCrisis() {
+    if (confirm('Permanently delete this crisis report and all its media? This cannot be undone.')) {
+        document.getElementById('deleteCrisisForm').submit();
+    }
+}
+
+async function deleteMedia(btn) {
+    if (!confirm('Remove this media file?')) return;
+    const mediaId = btn.dataset.mediaId;
+    const csrf    = btn.dataset.csrf;
+    btn.disabled  = true;
+
+    try {
+        const res = await fetch('/media/' + mediaId + '/delete/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrf,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        if (res.ok || res.redirected) {
+            const item = document.getElementById('media-item-' + mediaId);
+            if (item) {
+                item.style.transition = 'opacity 0.25s, transform 0.25s';
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(10px)';
+                setTimeout(function() {
+                    item.remove();
+                    var list = document.getElementById('mediaManageList');
+                    if (list && list.children.length === 0) {
+                        list.insertAdjacentHTML('afterend', '<p class="form-hint" id="noMediaMsg">No media attached to this report.</p>');
+                        list.remove();
+                    }
+                }, 260);
+            }
+        } else {
+            alert('Could not delete media. Please try again.');
+            btn.disabled = false;
+        }
+    } catch(e) {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

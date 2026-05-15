@@ -1,9 +1,8 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import User, Profile, Role
-
+from .models import User, Role, Profile
 
 def register(request):
     if request.method == 'POST':
@@ -13,51 +12,61 @@ def register(request):
         role_id = request.POST.get('role')
 
         if User.objects.filter(email=email).exists():
-            messages.error(request, 'Email already registered.')
-            return redirect('register')
+            messages.error(request, "Email already registered.")
+            return render(request, 'accounts/register.html', {'roles': Role.objects.all()})
 
-        role = Role.objects.filter(id=role_id).first()
-        user = User.objects.create_user(username=username, email=email, password=password, role=role)
+        user = User.objects.create_user(
+            email=email,
+            username=username,
+            password=password
+        )
+        
+        if role_id:
+            user.role_id = role_id
+            user.save()
+
+        # Create profile
         Profile.objects.create(user=user)
+        
         login(request, user)
+        messages.success(request, f"Welcome, {username}!")
         return redirect('crisis_feed')
 
-    roles = Role.objects.all()
-    return render(request, 'accounts/register.html', {'roles': roles})
-
+    return render(request, 'accounts/register.html', {'roles': Role.objects.all()})
 
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
         user = authenticate(request, email=email, password=password)
-        if user:
+        
+        if user is not None:
             login(request, user)
             return redirect('crisis_feed')
-        messages.error(request, 'Invalid email or password.')
+        else:
+            messages.error(request, "Invalid email or password.")
+            
     return render(request, 'accounts/login.html')
-
 
 @login_required
 def logout_view(request):
     logout(request)
     return redirect('login')
 
-
 @login_required
 def profile(request):
-    profile_obj, _ = Profile.objects.get_or_create(user=request.user)
-
+    profile, created = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
-        profile_obj.bio = request.POST.get('bio', '')
-        profile_obj.phone = request.POST.get('phone', '')
-        if 'avatar' in request.FILES:
-            profile_obj.avatar = request.FILES['avatar']
-        profile_obj.save()
-
-        request.user.username = request.POST.get('username', request.user.username)
+        request.user.username = request.POST.get('username')
         request.user.save()
-        messages.success(request, 'Profile updated.')
+        
+        profile.bio = request.POST.get('bio')
+        profile.phone = request.POST.get('phone')
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+        profile.save()
+        
+        messages.success(request, "Profile updated successfully!")
         return redirect('profile')
-
-    return render(request, 'accounts/profile.html', {'profile': profile_obj})
+        
+    return render(request, 'accounts/profile.html', {'profile': profile})

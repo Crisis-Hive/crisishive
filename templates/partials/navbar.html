@@ -9,6 +9,9 @@
         <a href="{% url 'crisis_feed' %}" class="{% if request.resolver_match.url_name == 'crisis_feed' %}active{% endif %}">Home</a>
         <a href="{% url 'crisis_map' %}" class="{% if request.resolver_match.url_name == 'crisis_map' %}active{% endif %}">Map</a>
         <a href="{% url 'report_crisis' %}" class="{% if request.resolver_match.url_name == 'report_crisis' %}active{% endif %}">Report Crisis</a>
+        {% if request.user.is_authenticated %}
+        <a href="{% url 'my_reports' %}" class="{% if request.resolver_match.url_name == 'my_reports' %}active{% endif %}">My Reports</a>
+        {% endif %}
     </div>
 
     <div class="navbar__auth">
@@ -38,6 +41,9 @@
     <a href="{% url 'crisis_feed' %}">🏠 Home</a>
     <a href="{% url 'crisis_map' %}">🗺️ Map</a>
     <a href="{% url 'report_crisis' %}">🚨 Report Crisis</a>
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'my_reports' %}">📋 My Reports</a>
+    {% endif %}
     <div class="mobile-divider"></div>
     {% if request.user.is_authenticated %}
         <a href="{% url 'profile' %}">👤 {{ request.user.username }}</a>

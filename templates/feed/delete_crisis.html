@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Crisis — CrisisHive{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/response.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<div class="form-page-wrapper" style="max-width: 560px; text-align: center; padding-top: 4rem;">
+    <div class="delete-confirm-icon">🗑️</div>
+    <h1 class="delete-confirm-title">Delete Crisis Report?</h1>
+    <p class="delete-confirm-desc">
+        You're about to permanently delete <strong>{{ crisis.title }}</strong>. All attached media, upvotes, status updates, and team assignments will also be removed. This cannot be undone.
+    </p>
+    <div class="delete-confirm-actions">
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger-delete btn-danger-delete--lg">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                Yes, Delete Forever
+            </button>
+        </form>
+        <a href="{% url 'crisis_detail' crisis.pk %}" class="btn-cancel-edit">Cancel</a>
+    </div>
+</div>
+{% endblock %}

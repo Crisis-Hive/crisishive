@@ -123,6 +123,95 @@ def report_crisis(request):
     })
 
 @login_required
+def edit_crisis(request, pk):
+    crisis = get_object_or_404(Crisis, pk=pk)
+
+    # Only reporter or staff can edit
+    if crisis.reported_by != request.user and not request.user.is_staff:
+        messages.error(request, "You can only edit crises you reported.")
+        return redirect('crisis_detail', pk=pk)
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        category_id = request.POST.get('category')
+        severity = request.POST.get('severity')
+        district_id = request.POST.get('district')
+
+        if not all([title, description, category_id, severity, district_id]):
+            messages.error(request, 'All required fields must be filled.')
+        else:
+            crisis.title = title
+            crisis.description = description
+            crisis.category_id = category_id
+            crisis.severity = severity
+            crisis.district_id = district_id
+            crisis.save()
+
+            # New media uploads
+            for f in request.FILES.getlist('media'):
+                m_type = 'image' if f.content_type.startswith('image') else 'video'
+                CrisisMedia.objects.create(crisis=crisis, file=f, media_type=m_type, uploaded_by=request.user)
+
+            messages.success(request, "Crisis updated successfully.")
+            return redirect('crisis_detail', pk=pk)
+
+    return render(request, 'feed/edit_crisis.html', {
+        'crisis': crisis,
+        'categories': Category.objects.all(),
+        'districts': District.objects.all(),
+        'severity_choices': Crisis.SEVERITY_CHOICES,
+    })
+
+
+@login_required
+def delete_crisis(request, pk):
+    crisis = get_object_or_404(Crisis, pk=pk)
+
+    if crisis.reported_by != request.user and not request.user.is_staff:
+        messages.error(request, "You can only delete crises you reported.")
+        return redirect('crisis_detail', pk=pk)
+
+    if request.method == 'POST':
+        crisis.delete()
+        messages.success(request, "Crisis report deleted.")
+        return redirect('crisis_feed')
+
+    return render(request, 'feed/delete_crisis.html', {'crisis': crisis})
+
+
+@login_required
+def delete_media(request, media_pk):
+    media = get_object_or_404(CrisisMedia, pk=media_pk)
+    crisis_pk = media.crisis.pk
+
+    if media.crisis.reported_by != request.user and not request.user.is_staff:
+        messages.error(request, "You can only delete media from your own reports.")
+        return redirect('crisis_detail', pk=crisis_pk)
+
+    if request.method == 'POST':
+        # Delete file from disk
+        if media.file:
+            import os
+            if os.path.isfile(media.file.path):
+                os.remove(media.file.path)
+        media.delete()
+        messages.success(request, "Media removed.")
+        return redirect('edit_crisis', pk=crisis_pk)
+
+    return redirect('edit_crisis', pk=crisis_pk)
+
+
+@login_required
+def my_reports(request):
+    crises = Crisis.objects.filter(reported_by=request.user).annotate(
+        upvote_count=Count('upvotes'),
+        media_count=Count('media'),
+    ).order_by('-created_at')
+    return render(request, 'feed/my_reports.html', {'crises': crises})
+
+
+@login_required
 def toggle_upvote(request, pk):
     crisis = get_object_or_404(Crisis, pk=pk)
     upvote, created = Upvote.objects.get_or_create(crisis=crisis, user=request.user)

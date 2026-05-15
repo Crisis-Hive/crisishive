@@ -1,6 +1,6 @@
 // ── Upvote (feed + detail) ──
 document.querySelectorAll('.upvote-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async() => {
         const id = btn.dataset.id;
         if (!id) return;
         try {
@@ -73,9 +73,16 @@ if (dropzone && mediaInput) {
                 reader.onload = e => {
                     const img = document.createElement('img');
                     img.src = e.target.result;
+                    img.className = 'dropzone__thumb';
                     mediaPreview.appendChild(img);
                 };
                 reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                const label = document.createElement('div');
+                label.className = 'dropzone__thumb';
+                label.style.cssText = 'display:flex;align-items:center;justify-content:center;background:#1a1a1a;color:#888;font-size:0.75rem;text-align:center;padding:4px;';
+                label.textContent = '🎬 ' + file.name.slice(0, 12) + (file.name.length > 12 ? '…' : '');
+                mediaPreview.appendChild(label);
             }
         });
     }

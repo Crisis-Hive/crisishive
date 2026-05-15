@@ -16,6 +16,14 @@ def _unique_username(email):
     return username
 
 
+def _get_roles():
+    """Fetch roles safely - returns empty queryset if table doesn't exist yet."""
+    try:
+        return Role.objects.all()
+    except Exception:
+        return Role.objects.none()
+
+
 def register(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
@@ -25,7 +33,7 @@ def register(request):
 
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email already registered.")
-            return render(request, 'accounts/register.html', {'roles': Role.objects.all()})
+            return render(request, 'accounts/register.html', {'roles': _get_roles()})
 
         user = User.objects.create_user(
             email=email,
@@ -44,7 +52,7 @@ def register(request):
         messages.success(request, f"Welcome, {username}!")
         return redirect('crisis_feed')
 
-    return render(request, 'accounts/register.html', {'roles': Role.objects.all()})
+    return render(request, 'accounts/register.html', {'roles': _get_roles()})
 
 
 def login_view(request):

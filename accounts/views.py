@@ -14,7 +14,8 @@ def _unique_username(email):
     if not email or '@' not in email:
         return "user"
         
-    base = email.split('@')[0][:130] 
+    # FIX: Get the element at index 0, then slice it as a string
+    base = email.split('@')[0][:130]
     
     username = base
     counter = 1
@@ -22,6 +23,7 @@ def _unique_username(email):
         username = f"{base}{counter}"
         counter += 1
     return username
+
 
 
 

@@ -11,13 +11,18 @@ from allauth.account.adapter import get_adapter
 
 def _unique_username(email):
     """Derive a unique username from the email address safely."""
-    base = email.split('@')[0][:130] if email and '@' in email else "user"
+    if not email or '@' not in email:
+        return "user"
+        
+    base = email.split('@')[0][:130] 
+    
     username = base
     counter = 1
     while User.objects.filter(username=username).exists():
         username = f"{base}{counter}"
         counter += 1
     return username
+
 
 
 def _get_roles():

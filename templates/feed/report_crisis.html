@@ -132,15 +132,15 @@
 
 {% block extra_js %}
 <script>
-const gpsBtn           = document.getElementById('gpsBtn');
-const locationNameBox  = document.getElementById('locationNameBox');
-const locationNameText = document.getElementById('locationNameText');
-const locationError    = document.getElementById('locationError');
-const clearBtn         = document.getElementById('clearLocation');
-const latInput         = document.getElementById('latInput');
-const lngInput         = document.getElementById('lngInput');
-const locationNameInput= document.getElementById('locationNameInput');
-const manualLocation   = document.getElementById('manualLocation');
+const gpsBtn            = document.getElementById('gpsBtn');
+const locationNameBox   = document.getElementById('locationNameBox');
+const locationNameText  = document.getElementById('locationNameText');
+const locationError     = document.getElementById('locationError');
+const clearBtn          = document.getElementById('clearLocation');
+const latInput          = document.getElementById('latInput');
+const lngInput          = document.getElementById('lngInput');
+const locationNameInput = document.getElementById('locationNameInput');
+const manualLocation    = document.getElementById('manualLocation');
 
 // ── GPS Detection ──────────────────────────────────────────────
 gpsBtn.addEventListener('click', () => {
@@ -159,7 +159,6 @@ gpsBtn.addEventListener('click', () => {
             latInput.value = lat.toFixed(6);
             lngInput.value = lng.toFixed(6);
 
-            // Reverse geocode to get location name
             try {
                 const res  = await fetch(
                     `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
@@ -168,11 +167,12 @@ gpsBtn.addEventListener('click', () => {
                 const name = buildLocationName(data);
                 showLocationName(name);
                 locationNameInput.value = name;
+                manualLocation.value = name; // sync manual box too
             } catch {
-                // Fallback to coordinates if reverse geocode fails
                 const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                 showLocationName(fallback);
                 locationNameInput.value = fallback;
+                manualLocation.value = fallback;
             }
 
             gpsBtn.textContent = '📍 Detect My Location';
@@ -204,17 +204,39 @@ function buildLocationName(data) {
     return parts.slice(0, 3).join(', ') || data.display_name || 'Unknown location';
 }
 
-// ── Manual input syncs to hidden field ────────────────────────
+// ── Manual input — geocode the typed name ─────────────────────
+let geocodeTimer = null;
 manualLocation.addEventListener('input', () => {
     locationNameInput.value = manualLocation.value;
-    // Clear GPS coords if user is typing manually
-    latInput.value = '';
-    lngInput.value = '';
-    if (manualLocation.value) {
-        showLocationName(manualLocation.value);
-    } else {
+
+    if (!manualLocation.value) {
         locationNameBox.style.display = 'none';
+        latInput.value = '';
+        lngInput.value = '';
+        return;
     }
+
+    showLocationName(manualLocation.value);
+
+    // Debounce geocoding — wait 800ms after user stops typing
+    clearTimeout(geocodeTimer);
+    geocodeTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(manualLocation.value)}&format=json&limit=1&countrycodes=bd`
+            );
+            const data = await res.json();
+            if (data && data.length > 0) {
+                latInput.value = parseFloat(data[0].lat).toFixed(6);
+                lngInput.value = parseFloat(data[0].lon).toFixed(6);
+                showLocationName(data[0].display_name);
+                locationNameInput.value = data[0].display_name;
+            }
+            // if no result found, lat/lng stay empty — that's fine
+        } catch {
+            // geocoding failed silently — lat/lng stay empty
+        }
+    }, 800);
 });
 
 // ── Clear location ─────────────────────────────────────────────

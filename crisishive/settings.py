@@ -166,7 +166,8 @@ STATICFILES_DIRS = [STATIC_DIR]
 # Use a simpler storage backend that doesn't crash if manifest is missing
 STORAGES = {
     'default': {
-'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',    },
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },

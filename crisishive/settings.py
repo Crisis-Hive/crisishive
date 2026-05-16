@@ -16,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # --- ROBUST DIRECTORY CREATION ---
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_DIR = BASE_DIR / 'static'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / 'media'))
 
 os.makedirs(STATIC_ROOT, exist_ok=True)
 os.makedirs(STATIC_DIR, exist_ok=True)
